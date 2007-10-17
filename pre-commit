@@ -2,28 +2,34 @@
 
 GNATROOT=/opt/gnat/2007
 
-PATH=$GNATROOT/bin:$PATH
+PATH=$GNATROOT/bin:$HOME/bin:$PATH
 
 res=0
+
+REP=/tmp/_$$
+
+SC_OPTS="-ign out -ign tmplt -ign sed -ign txt -lang Ada -cp -cy -sp -gnat05 -lang XML -l256"
 
 function check() {
    id=$4
    file=`basename $6`
-   git show $id > /tmp/$file
-   ( cd /tmp; style_checker $file; )
+   git show $id > $REP/$file
+   ( cd $REP; style_checker $SC_OPTS $file; )
    res=$(($res + $?))
-   rm -f /tmp/$file
+   rm -f $REP/$file
 }
+
+mkdir $REP
 
 # Get files to be commited
 # <N1> <N2> <Id-OLD> <Id-NEW> <status> <Filename>
-git-diff-index -M --cached HEAD > /tmp/files
+git-diff-index -M --cached HEAD > $REP/files
 
 while read list
 do
    check $list
-done < /tmp/files
+done < $REP/files
 
-rm /tmp/files
+rm -fr $REP
 
 exit $res

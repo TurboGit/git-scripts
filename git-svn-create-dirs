@@ -1,0 +1,27 @@
+#! /bin/sh
+
+if [ ! -f .git/config ]; then
+   echo Must be run inside a Git repository
+fi;
+
+FS=" ="
+svnrepo=`awk '$1=="[svn-remote"{GET=1} \
+    $1=="url" && GET==1 {print $3}' .git/config`
+
+echo Looking for empty directories from $svnrepo
+
+FILE=/tmp/files-$$
+
+svn list -R $svnrepo > $FILE
+
+while read entry
+do
+   if [ "${entry: -1:1}" == "/" ]; then
+      if [ ! -d "$entry" ]; then
+      	 echo create $entry
+	 mkdir -p $entry
+      fi
+   fi
+done < $FILE
+
+rm -f $FILE
