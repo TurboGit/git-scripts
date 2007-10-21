@@ -8,13 +8,32 @@ res=0
 
 REP=/tmp/_$$
 
-SC_OPTS="-ign out -ign tmplt -ign sed -ign txt -lang Ada -cp -cy -sp -gnat05 -lang XML -l256"
+# Look for the Git root directory
+ROOT=`pwd`
+while [ ! "$ROOT" = "" -a ! -d $ROOT/.git ]; do
+   cd ..
+   ROOT=`pwd`
+done
+
+# Repository name
+REPOSIT=`basename $ROOT`
+
+[ "$REPOSIT" == "" ] && echo No repository found && exit 1;
+
+# Set Style_Checker options
+
+case "$REPOSIT" in
+   *) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt -lang Ada -cp -cy -sp -gnat05 -lang XML -cP -cY -l256 -lang XSD -l256"
+   ;;
+esac
+
+# Process each file
 
 function check() {
    id=$4
    file=`basename $6`
    git show $id > $REP/$file
-   ( cd $REP; style_checker $SC_OPTS $file; )
+   ( cd $REP; style_checker $SC_OPTS -n "$6" "$file"; )
    res=$(($res + $?))
    rm -f $REP/$file
 }
