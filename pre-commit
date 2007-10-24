@@ -22,8 +22,10 @@ REPOSIT=`basename $ROOT`
 
 # Set Style_Checker options
 
+OWEB="-H -cP -cY -l256"
+
 case "$REPOSIT" in
-   *) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt -lang Ada -cp -cy -sp -gnat05 -lang XML -cP -cY -l256 -lang XSD -l256"
+   *) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt -lang Ada -cp -cy -sp -gnat05 -lang TXML $OWEB -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
    ;;
 esac
 
