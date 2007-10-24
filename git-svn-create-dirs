@@ -1,5 +1,12 @@
 #! /bin/sh
 
+# Look for the Git root directory
+ROOT=`pwd`
+while [ ! "$ROOT" = "" -a ! -d $ROOT/.git ]; do
+   cd ..
+   ROOT=`pwd`
+done
+
 if [ ! -f .git/config ]; then
    echo Must be run inside a Git repository
 fi;
