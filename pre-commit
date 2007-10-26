@@ -8,15 +8,9 @@ res=0
 
 REP=/tmp/_$$
 
-# Look for the Git root directory
-ROOT=`pwd`
-while [ ! "$ROOT" = "" -a ! -d $ROOT/.git ]; do
-   cd ..
-   ROOT=`pwd`
-done
-
 # Repository name
-REPOSIT=`basename $ROOT`
+GIT_INDEX_DIR=`dirname $GIT_INDEX_FILE`
+REPOSIT=`dirname $GIT_INDEX_DIR`
 
 [ "$REPOSIT" == "" ] && echo No repository found && exit 1;
 
@@ -25,7 +19,9 @@ REPOSIT=`basename $ROOT`
 OWEB="-H -cP -cY -l256"
 
 case "$REPOSIT" in
-   *) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt -lang Ada -cp -cy -sp -gnat05 -lang TXML $OWEB -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
+   *) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
+        -lang Ada -cp -cy -sp -gnat05 -lang TXML $OWEB \
+        -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
    ;;
 esac
 
