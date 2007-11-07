@@ -34,6 +34,11 @@ esac
 function check() {
    id=$4
    file=`basename $6`
+   mode=$5
+   # skip deleted files
+   if [ "$mode" = "D" ]; then
+       return 0;
+   fi
    git show $id > $REP/$file
    ( cd $REP; style_checker $SC_OPTS -n "$6" "$file"; )
    res=$(($res + $?))
