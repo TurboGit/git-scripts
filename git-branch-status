@@ -25,7 +25,7 @@ function usage() {
    echo "output the number of commits not yet merged on <branchname>."
    echo ""
    echo "   -r   : also output the number of commits done on <branchname>"
-   echo "          since the branch has been created."
+   echo "          since last merge."
    echo "   -l   : list commits to be merged."
    echo "   -v   : verbose mode"
    exit 1
