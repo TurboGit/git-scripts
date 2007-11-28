@@ -69,24 +69,20 @@ fi;
 
 BRANCHES=/tmp/branches-$$
 REVLIST=/tmp/rl-$$
-BOUTPUT=/tmp/bout-$$
 
 function check_branch (){
-   out=0
    branch=$1
 
-   echo "" > $BOUTPUT
-   echo -n $branch >> $BOUTPUT
+   BOUTPUT=$branch
 
    if [ "$REBASE" = "1" ]; then
       git rev-list --pretty=oneline $branch..$MASTER > $REVLIST
       if [ -s $REVLIST ]; then
          n=`cat $REVLIST | wc -l`
-         echo -n ", "$n" commit(s) away" >> $BOUTPUT
-	 out=1
+         BOUTPUT="$BOUTPUT, "$n" commit(s) away"
       else
          if [ "$VERBOSE" = "1" ]; then
-            echo -n ", no rebase required" >> $BOUTPUT
+            BOUTPUT="$BOUTPUT, no rebase required"
          fi
       fi
    fi
@@ -94,21 +90,20 @@ function check_branch (){
    git rev-list --pretty=oneline $MASTER..$branch > $REVLIST
    if [ -s $REVLIST ]; then
       n=`cat $REVLIST | wc -l`
-      echo ", "$n" merge(s) waiting" >> $BOUTPUT
-      out=1
+      BOUTPUT="$BOUTPUT, $n merge(s) waiting"
       if [ "$LIST" = "1" ]; then
-         cat $REVLIST >> $BOUTPUT
+         BOUTPUT="$BOUTPUT\n$(cat $REVLIST)"
       fi
    else
       if [ "$VERBOSE" = "1" ]; then
-         echo ", nothing to merge" >> $BOUTPUT
+         BOUTPUT=", nothing to merge"
       fi
    fi
 
-   if [ "$out" = "1" ]; then
-      cat $BOUTPUT
+   if [ "$BOUTPUT" != "$branch" ]; then
+      echo -e "$BOUTPUT"
+      echo
    fi
-   rm -f $BOUTPUT
 }
 
 # List all branched, removes the star and skip the master branch
