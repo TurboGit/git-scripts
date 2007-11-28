@@ -67,7 +67,6 @@ if [ ! -f .git/config ]; then
    echo Must be run inside a Git repository
 fi;
 
-BRANCHES=/tmp/branches-$$
 REVLIST=/tmp/rl-$$
 
 function check_branch (){
@@ -108,11 +107,9 @@ function check_branch (){
 
 # List all branched, removes the star and skip the master branch
 
-git branch | sed 's,*,,g' | grep -v $MASTER > $BRANCHES
-
-while read entry
+git branch | sed 's,*,,g' | grep -v $MASTER | while read entry
 do
    check_branch $entry
-done < $BRANCHES
+done
 
-rm -f $BRANCHES $REVLIST
+rm -f $REVLIST
