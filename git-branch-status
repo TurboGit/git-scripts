@@ -67,17 +67,16 @@ if [ ! -f .git/config ]; then
    echo Must be run inside a Git repository
 fi;
 
-REVLIST=/tmp/rl-$$
-
 function check_branch (){
    branch=$1
 
    BOUTPUT=$branch
+   REVLIST=""
 
    if [ "$REBASE" = "1" ]; then
-      git rev-list --pretty=oneline $branch..$MASTER > $REVLIST
-      if [ -s $REVLIST ]; then
-         n=`cat $REVLIST | wc -l`
+      REVLIST=$(git rev-list --pretty=oneline $branch..$MASTER)
+      if [ "$REVLIST" != "" ]; then
+         n=$(echo -e "$REVLIST" | wc -l)
          BOUTPUT="$BOUTPUT, "$n" commit(s) away"
       else
          if [ "$VERBOSE" = "1" ]; then
@@ -86,12 +85,12 @@ function check_branch (){
       fi
    fi
 
-   git rev-list --pretty=oneline $MASTER..$branch > $REVLIST
-   if [ -s $REVLIST ]; then
-      n=`cat $REVLIST | wc -l`
-      BOUTPUT="$BOUTPUT, $n merge(s) waiting"
+   REVLIST=$(git rev-list --pretty=oneline $MASTER..$branch)
+   if [ "$REVLIST" != "" ]; then
+      n=$(echo -e "$REVLIST" | wc -l)
+      BOUTPUT="$BOUTPUT, "$n" merge(s) waiting"
       if [ "$LIST" = "1" ]; then
-         BOUTPUT="$BOUTPUT\n$(cat $REVLIST)"
+         BOUTPUT="$BOUTPUT\n$REVLIST"
       fi
    else
       if [ "$VERBOSE" = "1" ]; then
