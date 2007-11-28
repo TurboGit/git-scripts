@@ -69,6 +69,8 @@ if [ ! -f .git/config ]; then
 fi;
 
 function check_branch (){
+   left=0
+   right=0
    branch=$1
 
    BOUTPUT=$branch
@@ -77,6 +79,7 @@ function check_branch (){
    if [ "$REBASE" = "1" ]; then
       REVLIST=$(git rev-list --pretty=oneline $branch..$MASTER)
       if [ "$REVLIST" != "" ]; then
+         left=1
          n=$(echo -e "$REVLIST" | wc -l)
          BOUTPUT="$BOUTPUT, "$n" commit(s) away"
       else
@@ -88,6 +91,7 @@ function check_branch (){
 
    REVLIST=$(git rev-list --pretty=oneline $MASTER..$branch)
    if [ "$REVLIST" != "" ]; then
+      right=1
       n=$(echo -e "$REVLIST" | wc -l)
       BOUTPUT="$BOUTPUT, "$n" merge(s) waiting"
       if [ "$LIST" = "1" ]; then
@@ -100,7 +104,15 @@ function check_branch (){
    fi
 
    if [ "$BOUTPUT" != "$branch" ]; then
-      echo -e "$BOUTPUT"
+      case "$left$right" in
+         "10") echo -n "<-  "
+            ;;
+         "01") echo -n "->  "
+            ;;
+         "11") echo -n "<-> "
+           ;;
+      esac
+      echo -e $BOUTPUT
       echo
    fi
 }
