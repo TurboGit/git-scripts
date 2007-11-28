@@ -46,18 +46,19 @@ do
       -h|--h|--he|--hel|--help)
             usage
 	    ;;
-       *)
-	    MASTER=$1
-	    break
+      "") break
+            ;;
+      *)
+            if [ "$MASTER" != "" ]; then
+	       MASTER=$1
+            fi
 	    ;;
    esac
    shift
 done
 
-if [ "$1" = "" ]; then
+if [ "$MASTER" = "" ]; then
    MASTER=master
-else
-   MASTER=$1
 fi
 
 echo ""
