@@ -105,9 +105,9 @@ function check_branch (){
 
    if [ "$BOUTPUT" != "$branch" ]; then
       case "$left$right" in
-         "10") echo -n "<-  "
+         "10") echo -n " -> "
             ;;
-         "01") echo -n "->  "
+         "01") echo -n "<-  "
             ;;
          "11") echo -n "<-> "
            ;;
