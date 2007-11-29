@@ -16,6 +16,7 @@ MASTER=master
 REBASE=0
 VERBOSE=0
 LIST=0
+SHOW_MERGE_BASE_DATE=0
 
 function usage() {
    echo "$0 [-r] [-v] [-l] [--help] [<branchname>]"
@@ -27,6 +28,7 @@ function usage() {
    echo "   -r   : also output the number of commits done on <branchname>"
    echo "          since last merge."
    echo "   -l   : list commits to be merged."
+   echo "   -sd  : show split date (merge base)"
    echo "   -v   : verbose mode"
    exit 1
 }
@@ -43,6 +45,9 @@ do
       -l)
             LIST=1
 	    ;;
+      -sd)
+           SHOW_MERGE_BASE_DATE=1
+           ;;
       -h|--h|--he|--hel|--help)
             usage
 	    ;;
@@ -74,6 +79,15 @@ function check_branch (){
    branch=$1
 
    BOUTPUT=$branch
+
+   if [ "$SHOW_MERGE_BASE_DATE" = "1" ]; then
+       refpoint=$(git merge-base $branch $MASTER)
+   else
+       refpoint=$(git rev-parse $branch)
+   fi
+
+   BOUTPUT=$BOUTPUT"\t"$(git log $refpoint -1 --pretty=format:"%ar %s")"\n"
+
    REVLIST=""
 
    if [ "$REBASE" = "1" ]; then
@@ -81,7 +95,7 @@ function check_branch (){
       if [ "$REVLIST" != "" ]; then
          left=1
          n=$(echo -e "$REVLIST" | wc -l)
-         BOUTPUT="$BOUTPUT, "$n" commit(s) away"
+         BOUTPUT="$BOUTPUT "$n" commit(s) away"
       else
          if [ "$VERBOSE" = "1" ]; then
             BOUTPUT="$BOUTPUT, no rebase required"
@@ -93,7 +107,10 @@ function check_branch (){
    if [ "$REVLIST" != "" ]; then
       right=1
       n=$(echo -e "$REVLIST" | wc -l)
-      BOUTPUT="$BOUTPUT, "$n" merge(s) waiting"
+      if [ "$left" = "0" ]; then
+          BOUTPUT="$BOUTPUT\t\t"
+      fi
+      BOUTPUT="$BOUTPUT$n merge(s) waiting"
       if [ "$LIST" = "1" ]; then
          BOUTPUT="$BOUTPUT\n$REVLIST"
       fi
