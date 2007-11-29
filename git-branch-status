@@ -16,6 +16,7 @@ MASTER=master
 REBASE=0
 VERBOSE=0
 LIST=0
+COLOR=1                         # Colorize by default
 SHOW_MERGE_BASE_DATE=0
 
 function usage() {
@@ -25,12 +26,24 @@ function usage() {
    echo "the branch given in option (default is master). By default it just"
    echo "output the number of commits not yet merged on <branchname>."
    echo ""
-   echo "   -r   : also output the number of commits done on <branchname>"
-   echo "          since last merge."
-   echo "   -l   : list commits to be merged."
-   echo "   -sd  : show split date (merge base)"
-   echo "   -v   : verbose mode"
+   echo "   -r         : also output the number of commits done"
+   echo "                on <branchname> since last merge."
+   echo "   -l         : list commits to be merged."
+   echo "   -sd        : show split date (merge base)"
+   echo "   --no-color : disable color"
+   echo "   -v         : verbose mode"
    exit 1
+}
+
+function set_colors() {
+    ESC_SEQ="\x1b["
+    COL_RESET=$ESC_SEQ"39;49;00m"
+    COL_RED=$ESC_SEQ"31;01m"
+    COL_GREEN=$ESC_SEQ"32;01m"
+    COL_YELLOW=$ESC_SEQ"33;01m"
+    COL_BLUE=$ESC_SEQ"34;01m"
+    COL_MAGENTA=$ESC_SEQ"35;01m"
+    COL_CYAN=$ESC_SEQ"36;01m"
 }
 
 while :
@@ -51,6 +64,9 @@ do
       -h|--h|--he|--hel|--help)
             usage
 	    ;;
+       --no-color)
+           COLOR=
+           ;;
       "") break
             ;;
       *)
@@ -66,6 +82,10 @@ if [ "$MASTER" = "" ]; then
    MASTER=master
 fi
 
+if [ "$COLOR" = "1" ]; then
+    set_colors;
+fi
+
 echo ""
 echo Check all branches against $MASTER
 
@@ -78,15 +98,15 @@ function check_branch (){
    right=0
    branch=$1
 
-   BOUTPUT=$branch
-
    if [ "$SHOW_MERGE_BASE_DATE" = "1" ]; then
        refpoint=$(git merge-base $branch $MASTER)
    else
        refpoint=$(git rev-parse $branch)
    fi
 
-   BOUTPUT=$BOUTPUT"\t"$(git log $refpoint -1 --pretty=format:"%ar %s")"\n"
+   BOUTPUT=$COL_YELLOW${branch}$COL_BLUE
+   BOUTPUT=$BOUTPUT" "$(git log $refpoint -1 --pretty=format:"%ar %s")
+   BOUTPUT=$BOUTPUT$COL_RESET"\n"
 
    REVLIST=""
 
@@ -95,7 +115,7 @@ function check_branch (){
       if [ "$REVLIST" != "" ]; then
          left=1
          n=$(echo -e "$REVLIST" | wc -l)
-         BOUTPUT="$BOUTPUT "$n" commit(s) away"
+         BOUTPUT="$BOUTPUT\t$COL_RED$n$COL_RESET commit(s) away"
       else
          if [ "$VERBOSE" = "1" ]; then
             BOUTPUT="$BOUTPUT, no rebase required"
@@ -107,10 +127,7 @@ function check_branch (){
    if [ "$REVLIST" != "" ]; then
       right=1
       n=$(echo -e "$REVLIST" | wc -l)
-      if [ "$left" = "0" ]; then
-          BOUTPUT="$BOUTPUT\t\t"
-      fi
-      BOUTPUT="$BOUTPUT$n merge(s) waiting"
+      BOUTPUT="$BOUTPUT\t$COL_RED$n$COL_RESET merge(s) waiting"
       if [ "$LIST" = "1" ]; then
          BOUTPUT="$BOUTPUT\n$REVLIST"
       fi
@@ -129,7 +146,7 @@ function check_branch (){
          "11") echo -n "<-> "
            ;;
       esac
-      echo -e $BOUTPUT
+      echo -e $BOUTPUT$COL_RESET
       echo
    fi
 }
