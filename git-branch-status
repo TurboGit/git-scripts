@@ -152,7 +152,7 @@ function check_branch (){
          "11") echo -n "<-> "
            ;;
       esac
-      echo -e $BOUTPUT$COL_RESET
+      echo -e "$BOUTPUT$COL_RESET"
       echo
    fi
 }
