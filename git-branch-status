@@ -42,10 +42,16 @@ function set_colors() {
     COL_RED=$ESC_SEQ"31;01m"
     COL_GREEN=$ESC_SEQ"32;01m"
     COL_YELLOW=$ESC_SEQ"33;01m"
+    COL_BROWN=$ESC_SEQ"33;02m"
     COL_BLUE=$ESC_SEQ"34;01m"
     COL_MAGENTA=$ESC_SEQ"35;01m"
     COL_CYAN=$ESC_SEQ"36;01m"
 }
+
+if [ ! -f .git/config ]; then
+   echo Must be run inside a Git repository
+   exit 1
+fi;
 
 while :
 do
@@ -95,10 +101,6 @@ fi
 echo ""
 echo Check all branches against $MASTER
 
-if [ ! -f .git/config ]; then
-   echo Must be run inside a Git repository
-fi;
-
 function check_branch (){
    left=0
    right=0
@@ -110,9 +112,9 @@ function check_branch (){
        refpoint=$(git rev-parse $branch)
    fi
 
-   BOUTPUT=$COL_YELLOW${branch}$COL_BLUE
+   BOUTPUT=$COL_BROWN${branch}$COL_BLUE
    BOUTPUT=$BOUTPUT" "$(git log $refpoint -1 --pretty=format:"%ar %s")
-   BOUTPUT=$BOUTPUT$COL_RESET"\n"
+   BOUTPUT=$BOUTPUT$COL_RESET
 
    REVLIST=""
 
@@ -121,10 +123,10 @@ function check_branch (){
       if [ "$REVLIST" != "" ]; then
          left=1
          n=$(echo -e "$REVLIST" | wc -l)
-         BOUTPUT="$BOUTPUT\t$COL_RED$n$COL_RESET commit(s) away"
+         BOUTPUT="$BOUTPUT\n\t$COL_RED$n$COL_RESET commit(s) away"
       else
          if [ "$VERBOSE" = "1" ]; then
-            BOUTPUT="$BOUTPUT, no rebase required"
+            BOUTPUT="$BOUTPUT\n\tno rebase required"
          fi
       fi
    fi
@@ -133,18 +135,20 @@ function check_branch (){
    if [ "$REVLIST" != "" ]; then
       right=1
       n=$(echo -e "$REVLIST" | wc -l)
-      BOUTPUT="$BOUTPUT\t$COL_RED$n$COL_RESET merge(s) waiting"
+      BOUTPUT="$BOUTPUT\n\t$COL_RED$n$COL_RESET merge(s) waiting"
       if [ "$LIST" = "1" ]; then
          BOUTPUT="$BOUTPUT\n$REVLIST"
       fi
    else
       if [ "$VERBOSE" = "1" ]; then
-         BOUTPUT=", nothing to merge"
+         BOUTPUT="$BOUTPUT\n\tnothing to merge"
       fi
    fi
 
    if [ "$BOUTPUT" != "$branch" ]; then
       case "$left$right" in
+         "00") echo -n "    "
+            ;;
          "10") echo -n " -> "
             ;;
          "01") echo -n "<-  "
@@ -158,13 +162,13 @@ function check_branch (){
 }
 
 if [ "$ORIGIN" != "" ]; then
-   check_branch $ORIGIN
+    check_branch $ORIGIN
 else
     # List all branched, removes the star and skip the master branch
 
     git branch | sed 's,*,,g' | grep -v $MASTER | while read entry
     do
-        check_branch $entry
+	check_branch $entry
     done
 fi
 
