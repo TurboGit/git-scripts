@@ -12,7 +12,8 @@
 #   This is used to check if a rebase is needed for a clean fast-forward
 
 # The master branch is master by default
-MASTER=master
+MASTER=
+ORIGIN=
 REBASE=0
 VERBOSE=0
 LIST=0
@@ -20,7 +21,7 @@ COLOR=1                         # Colorize by default
 SHOW_MERGE_BASE_DATE=0
 
 function usage() {
-   echo "$0 [-r] [-v] [-l] [--help] [<branchname>]"
+   echo "$0 [-r] [-v] [-l] [--help] [<origin>] [<branchname>]"
    echo ""
    echo "This command will compare all branches on a git repository against"
    echo "the branch given in option (default is master). By default it just"
@@ -70,8 +71,13 @@ do
       "") break
             ;;
       *)
-            if [ "$MASTER" != "" ]; then
+            if [ "$MASTER" = "" ]; then
 	       MASTER=$1
+            else
+                if [ "$ORIGIN" = "" ]; then
+                    ORIGIN=$MASTER
+                    MASTER=$1
+                fi
             fi
 	    ;;
    esac
@@ -151,11 +157,14 @@ function check_branch (){
    fi
 }
 
-# List all branched, removes the star and skip the master branch
+if [ "$ORIGIN" != "" ]; then
+   check_branch $ORIGIN
+else
+    # List all branched, removes the star and skip the master branch
 
-git branch | sed 's,*,,g' | grep -v $MASTER | while read entry
-do
-   check_branch $entry
-done
+    git branch | sed 's,*,,g' | grep -v $MASTER | while read entry
+    do
+        check_branch $entry
+    done
+fi
 
-rm -f $REVLIST
