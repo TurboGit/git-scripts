@@ -1,0 +1,34 @@
+This project aims at providing some scripts and hooks for Git.
+
+A first script (git-svn-create-dirs) can be used to create empty
+directories for a git-svn repository.
+
+A second script (git-branch-status) is to display a global status
+(merge, rebase, date) about all branches. This helps managing
+repositories with a lot of topic branches.
+
+Add support for completion for git-branch-status :
+
+ - Add git-branch-status in your $PATH
+ - Edit git-completion.bash :
+
+--- a/contrib/completion/git-completion.bash
++++ b/contrib/completion/git-completion.bash
+@@ -1144,6 +1144,7 @@ _git ()
+        bisect)      _git_bisect ;;
+        bundle)      _git_bundle ;;
+        branch)      _git_branch ;;
++       branch-status) _git_branch ;;
+        checkout)    _git_checkout ;;
+        cherry)      _git_cherry ;;
+        cherry-pick) _git_cherry_pick ;;
+@@ -1194,6 +1195,7 @@ complete -o default -o nospace -F _git_am git-am
+ complete -o default -o nospace -F _git_apply git-apply
+ complete -o default -o nospace -F _git_bisect git-bisect
+ complete -o default -o nospace -F _git_branch git-branch
++complete -o default -o nospace -F _git_branch git-branch-status
+ complete -o default -o nospace -F _git_bundle git-bundle
+ complete -o default -o nospace -F _git_checkout git-checkout
+ complete -o default -o nospace -F _git_cherry git-cherry
+
+  - Then git branch-status <TAB> should display branches
