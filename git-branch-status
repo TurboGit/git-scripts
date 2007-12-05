@@ -113,7 +113,7 @@ function check_branch (){
    fi
 
    BOUTPUT=$COL_BROWN${branch}$COL_BLUE
-   BOUTPUT=$BOUTPUT" "$(git log $refpoint -1 --pretty=format:"%ar %s")
+   BOUTPUT=$BOUTPUT" "$(git log $refpoint -1 --pretty=format:"%ar, %s")
    BOUTPUT=$BOUTPUT$COL_RESET
 
    REVLIST=""
