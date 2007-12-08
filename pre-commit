@@ -11,6 +11,7 @@ REP=/tmp/_$$
 # Repository name
 GIT_INDEX_DIR=`dirname $GIT_INDEX_FILE`
 REPOSIT=`dirname $GIT_INDEX_DIR`
+REPOSIT_NAME=`basename $REPOSIT`
 
 [ "$REPOSIT" == "" ] && echo No repository found && exit 1;
 
@@ -18,7 +19,11 @@ REPOSIT=`dirname $GIT_INDEX_DIR`
 
 OWEB="-H -cP -cY -l256"
 
-case "$REPOSIT" in
+case "$REPOSIT_NAME" in
+   gps) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
+        -lang Ada -h18 -cp -cy -sp -gnat05 -lang TXML $OWEB \
+        -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
+   ;;
    *) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
         -lang Ada -cp -cy -sp -gnat05 -lang TXML $OWEB \
         -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
