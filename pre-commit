@@ -26,7 +26,7 @@ CPYR=""
 EXCLUDE=""
 
 case "$REPOSIT_NAME" in
-   gps) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
+   gps) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt -H \
         -lang Ada -h18 -cp -cy -sp -gnat05 \
         -lang TXML $OWEB -lang Python -C -l120 -H \
         -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
