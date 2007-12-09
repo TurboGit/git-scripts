@@ -19,10 +19,19 @@ REPOSIT_NAME=`basename $REPOSIT`
 
 OWEB="-H -cP -cY -l256"
 
+#  The copyright pattern to check
+CPYR=""
+
+#  Pathnames matching the regexp will be excluded from the test
+EXCLUDE=""
+
 case "$REPOSIT_NAME" in
    gps) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
-        -lang Ada -h18 -cp -cy -sp -gnat05 -lang TXML $OWEB \
+        -lang Ada -h18 -cp -cy -sp -gnat05 \
+        -lang TXML $OWEB -lang Python -C -l120 -H \
         -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
+        CPYR="Copyright \(C\) 2\d\d\d-2\d\d\d, AdaCore"
+        EXCLUDE="\(design/tests\)"
    ;;
    *) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
         -lang Ada -cp -cy -sp -gnat05 -lang TXML $OWEB \
@@ -38,10 +47,18 @@ function check() {
    mode=$5
    # skip deleted files
    if [ "$mode" = "D" ]; then
-       return 0;
+      return 0;
    fi
+   if [[ -n "$EXCLUDE" && `echo "$6" | grep --regexp="$EXCLUDE"` ]]; then
+      return 0;
+   fi
+
    git show $id > $REP/$file
-   ( cd $REP; style_checker $SC_OPTS -n "$6" "$file"; )
+   if [ "$CPYR" = "" ]; then
+      ( cd $REP; style_checker $SC_OPTS -n "$6" "$file"; )
+   else
+      ( cd $REP; style_checker $SC_OPTS -cf'$CPYR' -n "$6" "$file"; )
+   fi
    res=$(($res + $?))
    rm -f $REP/$file
 }
