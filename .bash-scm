@@ -1,0 +1,118 @@
+# Some bash code to get information about the current SCM repository.
+#
+# Usage: add ". .bash-scm" into your .bashrc
+#
+# Description of the functions:
+#
+# $(current_scm_info)
+#
+#    This can be used to display the current branch or revision inside the
+#    bash prompt by adding $(current_scm_info) into the PS1 string.
+#
+# $(tab_title)
+#
+#    Information to display as the tab title. To avoid having a too long
+#    string this output the name of the repository (if any) and the current
+#    working directory. If outside a repository then the last two
+#    directories are output. It is possible to pass one agurment true/false
+#    to tab_title which is to output the hostname as prefix followed by
+#    ':'. So the full format is:
+#
+#    host:[repository] dir
+#
+
+function current_git_branch() {
+      local result=$(git-symbolic-ref HEAD 2>/dev/null)
+      [[ -z ${result} ]] || echo "(${result##refs/heads/})"
+}
+
+function current_cvs_repo() {
+      local result
+      if [[ -f CVS/Repository ]] ; then
+            result=$(< CVS/Repository)
+            echo "(CVS: ${result%%/*})"
+      fi
+}
+
+function current_svn_rev() {
+      local result
+      if [[ -d .svn ]] ; then
+            result=$(LANG=en_US svn info | \
+	            sed -n -e '/^Revision: \([0-9]*\).*$/s//\1/p')
+            echo "(SVN: r${result})"
+      fi
+}
+
+function current_scm_info() {
+   local mygitinfo=$(current_git_branch)
+   local mycvsinfo=$(current_cvs_repo)
+   local mysvninfo=$(current_svn_rev)
+
+   if [[ -n ${mygitinfo} ]] ; then
+         echo ${mygitinfo}
+   elif [[ -n ${mycvsinfo} ]] ; then
+         echo ${mycvsinfo}
+   elif [[ -n ${mysvninfo} ]] ; then
+         echo ${mysvninfo}
+   else
+         echo ""
+   fi
+}
+
+function root_dir() {
+   dir=$1
+   while [ "`dirname $dir`" != "." ]; do
+      dir=`dirname $dir`
+   done
+   echo $dir
+}
+
+function git_root() {
+   ROOT=`pwd`
+   while [ ! "$ROOT" = "" -a ! -d $ROOT/.git ]; do
+      cd ..
+      ROOT=`pwd`
+   done
+   echo $ROOT
+}
+
+function git_repository_name() {
+   echo `basename $(git_root)`
+}
+
+function svn_root() {
+   ROOT=`pwd`
+   LAST=$ROOT
+   while [ ! "$ROOT" = "" -a -d $ROOT/.svn ]; do
+      cd ..
+      LAST=$ROOT
+      ROOT=`pwd`
+   done
+   echo $LAST
+}
+
+function svn_repository_name() {
+   echo `basename $(svn_root)`
+}
+
+function tab_title() {
+   local mygitinfo=$(current_git_branch)
+   local mycvsinfo=$(current_cvs_repo)
+   local mysvninfo=$(current_svn_rev)
+   local cdir=`basename $PWD`
+
+   if [ "$1" == "true" ]; then
+       HNAME="`hostname`:";
+   fi;
+
+   if [[ -n ${mygitinfo} ]] ; then
+       echo "$HNAME[$(git_repository_name)] $cdir"
+   elif [[ -n ${mycvsinfo} ]] ; then
+       echo "$HNAME[$(root_dir `cat CVS/Repository`)] $cdir"
+   elif [[ -n ${mysvninfo} ]] ; then
+       echo "$HNAME[$(svn_repository_name)] $cdir"
+   else
+       rdir=`dirname $PWD`
+       echo $HNAME`basename $rdir`/$cdir
+   fi
+}
