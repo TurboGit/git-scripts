@@ -69,7 +69,7 @@ function root_dir() {
 
 function git_root() {
    ROOT=`pwd`
-   while [ ! "$ROOT" = "" -a ! -d $ROOT/.git ]; do
+   while [ ! "$ROOT" = "/" -a ! -d $ROOT/.git ]; do
       cd ..
       ROOT=`pwd`
    done
@@ -83,7 +83,7 @@ function git_repository_name() {
 function svn_root() {
    ROOT=`pwd`
    LAST=$ROOT
-   while [ ! "$ROOT" = "" -a -d $ROOT/.svn ]; do
+   while [ ! "$ROOT" = "/" -a -d $ROOT/.svn ]; do
       cd ..
       LAST=$ROOT
       ROOT=`pwd`
