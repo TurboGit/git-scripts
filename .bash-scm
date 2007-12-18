@@ -26,11 +26,15 @@ function current_git_branch() {
       [[ -z ${result} ]] || echo "(${result##refs/heads/})"
 }
 
+function current_cvs_repo_name() {
+      local result=$(< CVS/Repository)
+      echo "${result%%/*}"
+}
+
 function current_cvs_repo() {
-      local result
       if [[ -f CVS/Repository ]] ; then
             result=$(< CVS/Repository)
-            echo "(CVS: ${result%%/*})"
+            echo "(CVS: $(current_cvs_repo_name))"
       fi
 }
 
@@ -58,14 +62,6 @@ function current_scm_info() {
    if [[ -n ${mysvninfo} ]] ; then
          echo ${mysvninfo}
    fi
-}
-
-function root_dir() {
-   dir=$1
-   while [[ "$(dirname $dir)" != "." ]]; do
-      dir=$(dirname $dir)
-   done
-   echo $dir
 }
 
 function git_root() {
@@ -104,7 +100,7 @@ function tab_title() {
    elif [[ -n $(current_svn_rev) ]] ; then
        echo "$HNAME[$(svn_repository_name)] $cdir"
    elif [[ -n $(current_cvs_repo) ]] ; then
-       echo "$HNAME[$(root_dir $(cat CVS/Repository))] $cdir"
+       echo "$HNAME[$(current_cvs_repo_name)] $cdir"
    else
        rdir=$(dirname $PWD)
        echo $HNAME$(basename $rdir)/$cdir
