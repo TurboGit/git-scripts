@@ -30,11 +30,20 @@ case "$REPOSIT_NAME" in
         -lang Ada -h18 -cp -cy -sp -gnat05 \
         -lang TXML $OWEB -lang Python -C -L -H \
         -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
-        CPYR="Copyright \(C\) 2\d\d\d-2\d\d\d, AdaCore"
+        CPYR="Copyright \(C\) [12]\d\d\d-2\d\d\d, AdaCore"
         EXCLUDE="\(design/tests\|distrib/\)"
    ;;
    xmlada) SC_OPTS="-lang Ada -cp -cy -sp -gnat05"
         CPYR=" Copyright \(C\) 2\d\d\d-2\d\d\d, AdaCore "
+   ;;
+   ASIS) SC_OPTS="-L -lang Ada -cp -cy -sp -gnat05 -l79"
+        CPYR=" Copyright \(C\) [12]\d\d\d-2\d\d\d, (AdaCore|Free Software Foundation, Inc.) "
+   ;;
+   AWS) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
+        -lang Ada -cp -cy -sp -gnat05 -lang TXML $OWEB \
+        -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
+        CPYR=" Copyright \(C\) 2\d\d\d-2\d\d\d, AdaCore "
+        EXCLUDE="\(features\)"
    ;;
    *) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
         -lang Ada -cp -cy -sp -gnat05 -lang TXML $OWEB \
