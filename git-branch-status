@@ -48,7 +48,7 @@ function set_colors() {
     COL_CYAN=$ESC_SEQ"36;01m"
 }
 
-if [ ! -f .git/config ]; then
+if [[ -z $(git-symbolic-ref HEAD 2>/dev/null) ]]; then
    echo Must be run inside a Git repository
    exit 1
 fi;
@@ -171,4 +171,3 @@ else
 	check_branch $entry
     done
 fi
-
