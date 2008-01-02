@@ -98,6 +98,19 @@ if [ "$COLOR" = "1" ]; then
     set_colors;
 fi
 
+# Check if $MASTER branch exists
+
+if [[ -z $(git show-ref refs/heads/master) ]]; then
+    # No $MASTER branch. Use current branch
+
+    if [[ "$MASTER" != "master" ]]; then
+        # Do not warn if MASTER was automatically set
+        echo Warning. $MASTER branch does not exist
+    fi
+
+    MASTER=$(git-symbolic-ref HEAD)
+fi
+
 echo ""
 echo Check all branches against $MASTER
 
