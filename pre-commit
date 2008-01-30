@@ -45,6 +45,10 @@ case "$REPOSIT_NAME" in
         CPYR=" Copyright \(C\) 2\d\d\d-2\d\d\d, AdaCore "
         EXCLUDE="\(features\)"
    ;;
+   v2p) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
+        -lang Ada -cp -cy -sp -gnat05 -lang TXML $OWEB -lang Script -H \
+        -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
+   ;;
    *) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
         -lang Ada -cp -cy -sp -gnat05 -lang TXML $OWEB \
         -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
