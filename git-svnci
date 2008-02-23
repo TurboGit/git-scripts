@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [[ "$(git stash)" == "No local changes to save" ]]; then
+    NO_STASH=true
+fi
+git svn dcommit
+
+if [[ "$NO_STASH" != "true" ]]; then
+    git stash apply
+fi
