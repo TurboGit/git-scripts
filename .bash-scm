@@ -72,7 +72,7 @@ function git_root() {
 }
 
 function git_repository_name() {
-   echo $(basename $(git_root))
+   echo $(basename "$(git_root)")
 }
 
 function svn_root() {
@@ -85,11 +85,11 @@ function svn_root() {
 }
 
 function svn_repository_name() {
-   echo $(basename $(svn_root))
+   echo $(basename "$(svn_root)")
 }
 
 function tab_title() {
-   local cdir=$(basename $PWD)
+   local cdir=$(basename "$PWD")
 
    if [[ "$1" == "true" ]]; then
        HNAME="$(hostname):";
@@ -102,7 +102,7 @@ function tab_title() {
    elif [[ -n $(current_cvs_repo) ]] ; then
        echo "$HNAME[$(current_cvs_repo_name)] $cdir"
    else
-       rdir=$(dirname $PWD)
-       echo $HNAME$(basename $rdir)/$cdir
+       rdir=$(dirname "$PWD")
+       echo $HNAME$(basename "$rdir")/$cdir
    fi
 }
