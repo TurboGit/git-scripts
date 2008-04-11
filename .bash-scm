@@ -33,7 +33,6 @@ function current_cvs_repo_name() {
 
 function current_cvs_repo() {
       if [[ -f CVS/Repository ]] ; then
-            result=$(< CVS/Repository)
             echo "(CVS: $(current_cvs_repo_name))"
       fi
 }
