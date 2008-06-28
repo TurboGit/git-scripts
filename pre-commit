@@ -8,12 +8,18 @@ res=0
 
 REP=/tmp/_$$
 
-# Repository name
-GIT_INDEX_DIR=`dirname $GIT_INDEX_FILE`
-REPOSIT=`dirname $GIT_INDEX_DIR`
-REPOSIT_NAME=`basename $REPOSIT`
+while true; do
+    if [ -d .git ]; then
+	break;
+    fi
+    cd ..
+done
 
-[ "$REPOSIT" == "" ] && echo No repository found && exit 1;
+# Repository name
+PWD=`pwd`
+REPOSIT_NAME=`basename $PWD`
+
+[ "$REPOSIT_NAME" == "" ] && echo No repository found && exit 1;
 
 # Set Style_Checker options
 
