@@ -22,7 +22,7 @@
 #
 
 function current_git_branch() {
-      local result=$(git-symbolic-ref HEAD 2>/dev/null)
+      local result=$(git symbolic-ref HEAD 2>/dev/null)
       [[ -z ${result} ]] || echo "(${result##refs/heads/})"
 }
 
