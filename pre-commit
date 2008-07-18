@@ -48,7 +48,7 @@ case "$REPOSIT_NAME" in
    AWS|templates_parser) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
         -lang Ada -d -cp -cy -sp -gnat05 -lang TXML $OWEB \
         -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
-        CPYR=" Copyright \(C\) [12]\d\d\d-2\d\d\d "
+        CPYR=" Copyright \(C\) [12]\d\d\d-2\d\d\d, AdaCore"
         EXCLUDE="\(features\)"
    ;;
    v2p) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
