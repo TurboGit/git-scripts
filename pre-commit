@@ -33,9 +33,9 @@ EXCLUDE=""
 
 case "$REPOSIT_NAME" in
    gps) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt -H \
-        -lang Ada -d -h18 -cp -cy -sp -gnat05 \
+        -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB \
         -lang TXML $OWEB -lang Python -C -L -H \
-        -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
+        -lang CSS $OWEB -lang Ada -d -h18 -cp -cy -sp -gnat05"
         CPYR="Copyright \(C\) [12]\d\d\d-2\d\d\d, AdaCore"
         EXCLUDE="\(design/tests\|distrib/\)"
    ;;
@@ -46,9 +46,9 @@ case "$REPOSIT_NAME" in
         CPYR=" Copyright \(C\) [12]\d\d\d-2\d\d\d, (AdaCore|Free Software Foundation, Inc.) "
    ;;
    AWS|templates_parser) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
-        -lang Ada -d -cp -cy -sp -gnat05 -lang TXML $OWEB \
-        -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
-        CPYR=" Copyright \(C\) [12]\d\d\d-2\d\d\d, AdaCore"
+        -lang TXML $OWEB -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB \
+        -lang CSS $OWEB -lang Ada -d -cp -cy -sp -gnat05 "
+        CPYR=" Copyright \(C\) [12]\d\d\d-2\d\d\d, AdaCore "
         EXCLUDE="\(features\)"
    ;;
    v2p) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
