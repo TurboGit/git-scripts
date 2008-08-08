@@ -32,33 +32,40 @@ CPYR=""
 EXCLUDE=""
 
 case "$REPOSIT_NAME" in
-   gps) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt -H \
+   gps) CPYR="[[:space:]]Copyright[[:space:]]\(C\)[[:space:]][12]\d\d\d-2\d\d\d,[[:space:]]AdaCore[[:space:]]"
+	SC_OPTS="-ign out -ign tmplt -ign sed -ign txt -H \
         -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB \
         -lang TXML $OWEB -lang Python -C -L -H \
-        -lang CSS $OWEB -lang Ada -d -h18 -cp -cy -sp -gnat05"
-        CPYR="Copyright \(C\) [12]\d\d\d-2\d\d\d, AdaCore"
+        -lang CSS $OWEB -lang Ada -d -h18 -cp -cy -sp -gnat05 -cf $CPYR"
         EXCLUDE="\(design/tests\|distrib/\)"
-   ;;
-   xmlada) SC_OPTS="-lang Ada -d -cp -cy -sp -gnat05"
-        CPYR=" Copyright \(C\) 2\d\d\d-2\d\d\d, AdaCore "
-   ;;
-   gnat|ASIS) SC_OPTS="-L -lang Ada -d -cp -cy -sp -gnat05 -l79"
-        CPYR=" Copyright \(C\) [12]\d\d\d-2\d\d\d, (AdaCore|Free Software Foundation, Inc.) "
-   ;;
-   AWS|templates_parser) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
+	;;
+   xmlada) CPYR="[[:space:]]Copyright[[:space:]]\(C\)[[:space:]]2\d\d\d-2\d\d\d,[[:space:]]AdaCore[[:space:]]"
+	SC_OPTS="-lang Ada -d -cp -cy -sp -gnat05 -cf $CPYR"
+	;;
+   gnat|ASIS) CPYR="[[:space:]]Copyright[[:space:]]\(C\)[[:space:]][12]\d\d\d-2\d\d\d,[[:space:]](AdaCore|Free Software Foundation, Inc.)[[:space:]]"
+	SC_OPTS="-L -lang Ada -d -cp -cy -sp -gnat05 -l79 -cf $CPYR"
+	;;
+   AWS) CPYR="[[:space:]]Copyright[[:space:]]\(C\)[[:space:]][12]\d\d\d-2\d\d\d,[[:space:]]AdaCore[[:space:]]"
+	SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
         -lang TXML $OWEB -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB \
-        -lang CSS $OWEB -lang Ada -d -cp -cy -sp -gnat05 "
-        CPYR=" Copyright \(C\) [12]\d\d\d-2\d\d\d, AdaCore "
+        -lang CSS $OWEB -lang Ada -d -cp -cy -sp -gnat05 -cf $CPYR \
+	-lang makefile -cp -cy -cf $CPYR -lang Python -H"
         EXCLUDE="\(features\)"
-   ;;
+	MANIFEST="MANIFEST"
+	;;
+   templates_parser) CPYR="[[:space:]]Copyright[[:space:]]\(C\)[[:space:]][12]\d\d\d-2\d\d\d,[[:space:]]AdaCore[[:space:]]"
+	SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
+        -lang TXML $OWEB -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB \
+        -lang CSS $OWEB -lang Ada -d -cp -cy -sp -gnat05 -cf $CPYR"
+	;;
    v2p) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
         -lang Ada -d -cp -cy -sp -gnat05 -lang TXML $OWEB -lang Script -H \
         -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
-   ;;
+	;;
    *) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
         -lang Ada -cp -cy -sp -gnat05 -lang TXML $OWEB \
         -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
-   ;;
+	;;
 esac
 
 # Process each file
@@ -66,21 +73,36 @@ esac
 function check() {
    id=$4
    file=`basename $6`
-   mode=$5
-   # skip deleted files
-   if [ "$mode" = "D" ]; then
-      return 0;
-   fi
+   mode=$(echo $5 | cut -c1)
+
+   #  Check if it is a file to ignore
+
    if [[ -n "$EXCLUDE" && `echo "$6" | grep --regexp="$EXCLUDE"` ]]; then
       return 0;
    fi
 
-   git show $id > $REP/$file
-   if [ "$CPYR" = "" ]; then
-      ( cd $REP; style_checker $SC_OPTS -n "$6" "$file"; )
-   else
-      ( cd $REP; style_checker $SC_OPTS -cf "$CPYR" -n "$6" "$file"; )
+   #  skip deleted/renamed files
+
+   if [[ "$mode" = "D" || "$mode" = "R" ]]; then
+       echo $6 >> $REP/.files.removed
+       return 0;
    fi
+
+   git show $id > $REP/$file
+
+   #  If the MANIFEST keep it around
+
+   if [[ "$6" = "$MANIFEST" ]]; then
+       cp $REP/$file $REP/.manifest
+   fi
+
+   #  If a new file, record it
+
+   if [[ "$mode" == "A" ]]; then
+       echo $6 >> $REP/.files.added
+   fi
+
+   ( cd $REP; style_checker $SC_OPTS -n "$6" "$file"; )
    res=$(($res + $?))
    rm -f $REP/$file
 }
@@ -89,12 +111,46 @@ mkdir $REP
 
 # Get files to be commited
 # <N1> <N2> <Id-OLD> <Id-NEW> <status> <Filename>
-git-diff-index -M --cached HEAD > $REP/files
+git diff-index -M --cached HEAD > $REP/.files
 
 while read list
 do
    check $list
-done < $REP/files
+done < $REP/.files
+
+#  Check for MANIFEST if needed
+
+if [[ -n "$MANIFEST" && -f $REP/.files.added ]]; then
+    if [[ ! -f $REP/.manifest ]]; then
+	echo Files added, but $MANIFEST not updated
+	res=1
+    else
+	while read fadded
+	do
+	    grep --quiet $fadded $REP/.manifest
+	    if [[ $? = 1 ]]; then
+		echo File $fadded added but missing in $MANIFEST
+		res=1
+	    fi
+	done < $REP/.files.added
+    fi
+fi
+
+if [[ -n "$MANIFEST" && -f $REP/.files.removed ]]; then
+    if [[ ! -f $REP/.manifest ]]; then
+	echo Files removed, but $MANIFEST not updated
+	res=1
+    else
+	while read fremoved
+	do
+	    grep --quiet $fremoved $REP/.manifest
+	    if [[ $? = 0 ]]; then
+		echo File $fremoved removed but still in $MANIFEST
+		res=1
+	    fi
+	done < $REP/.files.removed
+    fi
+fi
 
 rm -fr $REP
 
