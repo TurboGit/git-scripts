@@ -42,7 +42,7 @@ case "$REPOSIT_NAME" in
    xmlada) CPYR="[[:space:]]Copyright[[:space:]]\(C\)[[:space:]]2\d\d\d-2\d\d\d,[[:space:]]AdaCore[[:space:]]"
 	SC_OPTS="-lang Ada -d -cp -cy -sp -gnat05 -cf $CPYR"
 	;;
-   gnat|ASIS) CPYR="[[:space:]]Copyright[[:space:]]\(C\)[[:space:]][12]\d\d\d-2\d\d\d,[[:space:]](AdaCore|Free Software Foundation, Inc.)[[:space:]]"
+   gnat|ASIS) CPYR="[[:space:]]Copyright[[:space:]]\(C\)[[:space:]][12]\d\d\d-2\d\d\d,[[:space:]](AdaCore|Free[[:space:]]Software[[:space:]]Foundation,[[:space:]]Inc.)[[:space:]]"
 	SC_OPTS="-L -lang Ada -d -cp -cy -sp -gnat05 -l79 -cf $CPYR"
 	;;
    AWS) CPYR="[[:space:]]Copyright[[:space:]]\(C\)[[:space:]][12]\d\d\d-2\d\d\d,[[:space:]]AdaCore[[:space:]]"
