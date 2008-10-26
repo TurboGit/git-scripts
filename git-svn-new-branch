@@ -1,0 +1,82 @@
+#! /bin/sh
+
+if [[ "$1" == "" ]]; then
+   echo 'usage: git-svn-new-branch URL [branch_name]'
+   echo '       URL is full url to subversion branch'
+   echo '       branch_name is the name of the branch to use locally'
+   echo '       (optional, in this case use subversion branch name)'
+   exit 1
+fi
+
+URL=$1
+
+if [[ "$2" == "" ]]; then
+    branch_name=$(basename $URL)
+else
+    branch_name=$2
+fi
+
+echo
+echo Track $URL on $branch_name
+echo Local branch : svn-$branch_name
+echo
+
+echo Check if local branches exist
+
+if [[ "$(git branch -r | grep $branch_name)" != "" ]]; then
+    echo Remote branch $branch_name already imported.
+    exit 1
+fi
+
+if [[ "$(git branch | grep svn-$branch_name)" != "" ]]; then
+    echo Local branch svn-$branch_name already present.
+    exit 1
+fi
+
+echo Check if remote branch exists
+
+svn list $URL > /dev/null 2>&1
+
+if [ $? = 1 ]; then
+   echo
+   echo The given URL does not exists.
+   exit 1
+fi
+
+git config svn-remote.svn-$branch_name.url $URL
+git config svn-remote.svn-$branch_name.fetch :refs/remotes/$branch_name
+
+echo Fetch branch data
+git svn fetch --no-follow-parent svn-$branch_name
+git branch --track svn-$branch_name $branch_name
+
+echo Checkout local branch
+git checkout svn-$branch_name
+
+echo Finding branch point
+rsvn=$(svn log --verbose $URL \
+    | grep -B0 -A20 -G "A /.*/$branch_name" \
+    | \grep -P "^r[\d]+ " | head -1 | cut -d' ' -f1 | cut -c2-)
+
+echo Subversion branch point: $rsvn
+
+rgit=$(git svn log --revision=$rsvn --show-commit \
+    | head -2 | tail -1 | cut -d' ' -f3)
+
+echo Corresponding Git revision: $rgit
+echo
+
+git log $rgit^..$rgit
+
+echo
+echo Only branch history has been fetched, consider using filter-branch
+echo to attach the old history to the branch.
+echo
+echo $ git filter-branch -f --tag-name-filter cat \\
+echo "   "--parent-filter "sed -e 's/^$/-p $rgit/'" \\
+echo "   svn-$branch_name"
+echo $ git reset --hard svn-$branch_name
+echo $ git update-ref refs/remotes/$branch_name svn-$branch_name
+echo $ find .git -name "*_map*" -print -exec rm -f {} \;
+echo $ git svn rebase
+echo
