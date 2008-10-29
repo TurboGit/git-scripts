@@ -22,44 +22,48 @@
 #
 
 function current_git_branch() {
-      local result=$(git symbolic-ref HEAD 2>/dev/null)
-      [[ -z ${result} ]] || echo "(${result##refs/heads/})"
+   local result=$(git symbolic-ref HEAD 2>/dev/null)
+   [[ -z ${result} ]] || echo "${result##refs/heads/}"
 }
 
 function current_cvs_repo_name() {
-      local result=$(< CVS/Repository)
-      echo "${result%%/*}"
+   local result=$(< CVS/Repository)
+   echo "${result%%/*}"
 }
 
 function current_cvs_repo() {
-      if [[ -f CVS/Repository ]] ; then
-            echo "(CVS: $(current_cvs_repo_name))"
-      fi
+   if [[ -f CVS/Repository ]] ; then
+      echo "CVS: $(current_cvs_repo_name)"
+   fi
 }
 
 function current_svn_rev() {
-      if [[ -d .svn ]] ; then
-            echo "(SVN: r$(LANG=en_US svn info | \
-	            sed -n -e '/^Revision: \([0-9]*\).*$/s//\1/p'))"
-      fi
+   if [[ -d .svn ]] ; then
+      echo "SVN: r$(LANG=en_US svn info | \
+         sed -n -e '/^Revision: \([0-9]*\).*$/s//\1/p')"
+   fi
 }
 
 function current_scm_info() {
    local mygitinfo=$(current_git_branch)
    if [[ -n ${mygitinfo} ]] ; then
-         echo ${mygitinfo}
-         return
+      if [[ -d $(git_root)/.git/svn ]]; then
+         echo "(s:${mygitinfo})"
+      else
+         echo "(${mygitinfo})"
+      fi
+      return
    fi
 
    local mycvsinfo=$(current_cvs_repo)
    if [[ -n ${mycvsinfo} ]] ; then
-         echo ${mycvsinfo}
+         echo "(${mycvsinfo})"
          return
    fi
 
    local mysvninfo=$(current_svn_rev)
    if [[ -n ${mysvninfo} ]] ; then
-         echo ${mysvninfo}
+         echo "(${mysvninfo})"
    fi
 }
 
