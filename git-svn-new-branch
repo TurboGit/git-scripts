@@ -69,7 +69,7 @@ echo Only branch history has been fetched, consider using filter-branch
 echo to attach the old history to the branch.
 echo
 echo $ git filter-branch -f --tag-name-filter cat \\
-echo "   "--parent-filter "sed -e 's/^$/-p $rgit/'" \\
+echo "   "--parent-filter \"sed -e 's/^$/-p $rgit/'\" \\
 echo "   svn-$branch_name"
 echo $ git reset --hard svn-$branch_name
 echo $ git update-ref refs/remotes/$branch_name svn-$branch_name
