@@ -50,9 +50,6 @@ echo Fetch branch data
 git svn fetch --no-follow-parent svn-$branch_name
 git branch --track svn-$branch_name $branch_name
 
-echo Checkout local branch
-git checkout svn-$branch_name
-
 echo Finding branch point
 rsvn=$(svn log --verbose $URL \
     | grep -B0 -A20 -G "A /.*/$branch_name" \
@@ -60,8 +57,7 @@ rsvn=$(svn log --verbose $URL \
 
 echo Subversion branch point: $rsvn
 
-rgit=$(git svn log --revision=$rsvn --show-commit \
-    | head -2 | tail -1 | cut -d' ' -f3)
+rgit=$(git svn find-rev r$rsvn)
 
 echo Corresponding Git revision: $rgit
 echo
@@ -80,3 +76,7 @@ echo $ git update-ref refs/remotes/$branch_name svn-$branch_name
 echo $ find .git -name "*_map*" -print -exec rm -f {} \;
 echo $ git svn rebase
 echo
+
+
+echo Checkout local branch
+git checkout svn-$branch_name
