@@ -1,89 +1,145 @@
 #! /bin/sh
 
+USAGE='URL [-f|-h|--help|--abort] [branch_name]'
+LONG_USAGE='URL is full url to subversion branch
+branch_name is the name of the branch to use locally
+   (optional, in this case use subversion branch name)
+'
+
+OPTIONS_SPEC=
+
+
 exec_path=$(git --exec-path)
 . $exec_path/git-sh-setup
-
 require_work_tree
 cd_to_toplevel
 set_reflog_action svn-new-branch
 
-if [[ "$1" == "" ]]; then
-   echo 'usage: git-svn-new-branch URL [branch_name]'
-   echo '       URL is full url to subversion branch'
-   echo '       branch_name is the name of the branch to use locally'
-   echo '       (optional, in this case use subversion branch name)'
-   exit 1
-fi
+abort () {
+   head=$(grep HEAD .git/SVN_NEW_BRANCH | sed -e "s/HEAD: //")
+   branch_name=$(grep BRANCH_NAME .git/SVN_NEW_BRANCH |
+      sed -e s"/BRANCH_NAME: //")
+   git checkout $head
+   git update-ref -d refs/remotes/$branch_name
+   git branch -D svn-$branch_name
+   find .git -name "*_map*" -print -exec rm -f {} \;
+}
 
-URL=$1
+get_new_branch () {
+   # Verify HEAD
+   head=$(git symbolic-ref -q HEAD) ||
+   head=$(git rev-parse --verify HEAD) ||
+   die "Bad HEAD - I need a HEAD"
+   rm -f .git/SVN_NEW_BRANCH
 
-if [[ "$2" == "" ]]; then
-    branch_name=$(basename $URL)
-else
-    branch_name=$2
-fi
+   echo HEAD: ${head#refs/heads/} >> .git/SVN_NEW_BRANCH
 
-echo
-echo Track $URL on $branch_name
-echo Local branch : svn-$branch_name
-echo
+   URL=$1
 
-echo Check if local branches exist
+   if [[ "$2" == "" ]]; then
+       branch_name=$(basename $URL)
+   else
+       branch_name=$2
+   fi
 
-if [[ "$(git branch -r | grep $branch_name)" != "" ]]; then
-    echo Remote branch $branch_name already imported.
-    exit 1
-fi
+   echo BRANCH_NAME: $branch_name >> .git/SVN_NEW_BRANCH
 
-if [[ "$(git branch | grep svn-$branch_name)" != "" ]]; then
-    echo Local branch svn-$branch_name already present.
-    exit 1
-fi
-
-echo Check if remote branch exists
-
-svn list $URL > /dev/null 2>&1
-
-if [ $? = 1 ]; then
    echo
-   echo The given URL does not exists.
-   exit 1
-fi
+   echo Track $URL on $branch_name
+   echo Local branch : svn-$branch_name
+   echo
 
-git config svn-remote.svn-$branch_name.url $URL
-git config svn-remote.svn-$branch_name.fetch :refs/remotes/$branch_name
+   echo Check if local branches exist
 
-echo Fetch branch data
-git svn fetch --no-follow-parent svn-$branch_name
-git branch --track svn-$branch_name $branch_name
+   if [[ "$(git branch -r | grep $branch_name)" != "" ]]; then
+       echo Remote branch $branch_name already imported.
+       exit 1
+   fi
 
-echo Finding branch point
-rsvn=$(svn log --verbose $URL \
-    | grep -B0 -A20 -G "A /.*/$branch_name" \
-    | \grep -P "^r[\d]+ " | head -1 | cut -d' ' -f1 | cut -c2-)
+   if [[ "$(git branch | grep svn-$branch_name)" != "" ]]; then
+       echo Local branch svn-$branch_name already present.
+       exit 1
+   fi
 
-echo Subversion branch point: $rsvn
+   echo Check if remote branch exists
 
-rgit=$(git svn find-rev r$rsvn)
+   svn list $URL > /dev/null 2>&1
 
-echo Corresponding Git revision: $rgit
-echo
+   if [ $? = 1 ]; then
+      echo
+      echo The given URL does not exists.
+      exit 1
+   fi
 
-git log $rgit^..$rgit
+   git config svn-remote.svn-$branch_name.url $URL
+   git config svn-remote.svn-$branch_name.fetch :refs/remotes/$branch_name
 
-echo
-echo Only branch history has been fetched, consider using filter-branch
-echo to attach the old history to the branch.
-echo
-echo $ git filter-branch -f --tag-name-filter cat \\
-echo "   "--parent-filter \"sed -e 's/^$/-p $rgit/'\" \\
-echo "   svn-$branch_name"
-echo $ git reset --hard svn-$branch_name
-echo $ git update-ref refs/remotes/$branch_name svn-$branch_name
-echo $ find .git -name "*_map*" -print -exec rm -f {} \;
-echo $ git svn rebase
-echo
+   echo Fetch branch data
+   git svn fetch --no-follow-parent svn-$branch_name
+   git branch --track svn-$branch_name $branch_name
 
+   echo Finding branch point
+   rsvn=$(svn log --verbose $URL \
+       | grep -B0 -A20 -G "A /.*/$branch_name" \
+       | \grep -P "^r[\d]+ " | head -1 | cut -d' ' -f1 | cut -c2-)
 
-echo Checkout local branch
-git checkout svn-$branch_name
+   echo Subversion branch point: $rsvn
+
+   rgit=$(git svn find-rev r$rsvn)
+   # Run it twice to avoid the svn rebuilding .rev_map messages
+   rgit=$(git svn find-rev r$rsvn)
+
+   echo Corresponding Git revision: $rgit
+   echo
+
+   git log $rgit^..$rgit
+
+   if test $force = 0
+   then
+      echo
+      echo Only branch history has been fetched, consider using filter-branch
+      echo to attach the old history to the branch.
+      echo
+      echo $ git filter-branch -f --tag-name-filter cat \\
+      echo "   "--parent-filter \"sed -e 's/^$/-p $rgit/'\" \\
+      echo "   svn-$branch_name"
+      echo $ git reset --hard svn-$branch_name
+      echo $ git update-ref refs/remotes/$branch_name svn-$branch_name
+      echo $ find .git -name "*_map*" -print -exec rm -f {} \;
+      echo $ git svn rebase
+      echo
+   else
+      (
+         git filter-branch -f --tag-name-filter cat \
+            --parent-filter "sed -e 's/^$/-p $rgit/'" svn-$branch_name &&
+         git reset --hard svn-$branch_name &&
+         git update-ref refs/remotes/$branch_name svn-$branch_name &&
+         find .git -name "*_map*" -print -exec rm -f {} \; &&
+         git svn rebase
+      ) || die "Failed ! Use --abort to revert all changes"
+
+      echo Checkout local branch
+      git checkout svn-$branch_name
+   fi
+}
+
+case "$#" in
+0)
+    usage ;;
+*)
+    cmd="$1"
+    shift
+    case "$cmd" in
+    -h|*help)
+        usage ;;
+    *abort)
+        abort ;;
+    -f|-force)
+        force=1 ;
+        test "$#" != 0 || usage
+        get_new_branch "$@" ;;
+    *)
+        test "$#" != 0 || usage
+        get_new_branch "$@" ;;
+    esac
+esac
