@@ -15,7 +15,18 @@ require_work_tree
 cd_to_toplevel
 set_reflog_action svn-new-branch
 
+# Get require_work_tree from git-rebase--interactive.sh
+require_clean_work_tree () {
+   # test if working tree is dirty
+   git rev-parse --verify HEAD > /dev/null &&
+   git update-index --ignore-submodules --refresh &&
+   git diff-files --quiet --ignore-submodules &&
+   git diff-index --cached --quiet HEAD --ignore-submodules -- ||
+   die "Working tree is dirty"
+}
+
 abort () {
+   require_clean_work_tree
    head=$(grep HEAD .git/SVN_NEW_BRANCH | sed -e "s/HEAD: //")
    branch_name=$(grep BRANCH_NAME .git/SVN_NEW_BRANCH |
       sed -e s"/BRANCH_NAME: //")
@@ -30,8 +41,10 @@ get_new_branch () {
    head=$(git symbolic-ref -q HEAD) ||
    head=$(git rev-parse --verify HEAD) ||
    die "Bad HEAD - I need a HEAD"
-   rm -f .git/SVN_NEW_BRANCH
 
+   require_clean_work_tree
+
+   rm -f .git/SVN_NEW_BRANCH
    echo HEAD: ${head#refs/heads/} >> .git/SVN_NEW_BRANCH
 
    URL=$1
