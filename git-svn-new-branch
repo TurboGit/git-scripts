@@ -1,5 +1,12 @@
 #! /bin/sh
 
+exec_path=$(git --exec-path)
+. $exec_path/git-sh-setup
+
+require_work_tree
+cd_to_toplevel
+set_reflog_action svn-new-branch
+
 if [[ "$1" == "" ]]; then
    echo 'usage: git-svn-new-branch URL [branch_name]'
    echo '       URL is full url to subversion branch'
