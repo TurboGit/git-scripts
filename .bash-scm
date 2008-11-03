@@ -48,7 +48,7 @@ function current_scm_info() {
    local mygitinfo=$(current_git_branch)
    if [[ -n ${mygitinfo} ]] ; then
       if [[ -d $(git_root)/.git/svn ]]; then
-         echo "(s:${mygitinfo})"
+         echo "(s'${mygitinfo})"
       else
          echo "(${mygitinfo})"
       fi
