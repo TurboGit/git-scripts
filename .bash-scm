@@ -45,13 +45,13 @@ function current_cvs_repo_name() {
 
 function current_cvs_repo() {
    if [[ -f CVS/Repository ]] ; then
-      echo "CVS: $(current_cvs_repo_name)"
+      echo "$(current_cvs_repo_name)"
    fi
 }
 
 function current_svn_rev() {
    if [[ -d .svn ]] ; then
-      echo "SVN: r$(svn info | \
+      echo "r$(svn info | \
          sed -n -e '/^Revision: \([0-9]*\).*$/s//\1/p')"
    fi
 }
@@ -65,22 +65,22 @@ function current_scm_info() {
 
    if [[ -n ${mygitinfo} ]] ; then
       if [[ -d $(git_root)/.git/svn ]]; then
-         printf $SCM_INFO_FORMAT "s'${mygitinfo}"
+         printf $SCM_INFO_FORMAT "git-svn'${mygitinfo}"
       else
-         printf $SCM_INFO_FORMAT "${mygitinfo}"
+         printf $SCM_INFO_FORMAT "git'${mygitinfo}"
       fi
       return
    fi
 
    local mycvsinfo=$(current_cvs_repo)
    if [[ -n ${mycvsinfo} ]] ; then
-         echo "${mycvsinfo}"
+         printf $SCM_INFO_FORMAT "cvs'${mycvsinfo}"
          return
    fi
 
    local mysvninfo=$(current_svn_rev)
    if [[ -n ${mysvninfo} ]] ; then
-         echo "${mysvninfo}"
+         printf $SCM_INFO_FORMAT "svn'${mysvninfo}"
    fi
 }
 
