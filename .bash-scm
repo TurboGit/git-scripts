@@ -51,7 +51,7 @@ function current_cvs_repo() {
 
 function current_svn_rev() {
    if [[ -d .svn ]] ; then
-      echo "r$(svn info | \
+      echo "r$(LANG=C svn info | \
          sed -n -e '/^Revision: \([0-9]*\).*$/s//\1/p')"
    fi
 }
