@@ -22,8 +22,20 @@
 #
 
 function current_git_branch() {
-   local result=$(git symbolic-ref HEAD 2>/dev/null)
-   [[ -z ${result} ]] || echo "${result##refs/heads/}"
+   local result git_dir git_state
+   result=$(git symbolic-ref HEAD 2>/dev/null)
+   result=${result##refs/heads/}
+   git_dir=$(git rev-parse --git-dir 2> /dev/null) || return
+
+   if test -d "$git_dir/rebase-merge"; then
+      git_state=" - rebase - "
+   elif test -f "$git_dir/rebase-apply"; then
+      git_state=" - am - "
+   elif test -f "$git_dir/BISECT_LOG"; then
+      git_state=" - bisect - "
+   fi
+
+   echo "$result$git_state"
 }
 
 function current_cvs_repo_name() {
@@ -39,31 +51,36 @@ function current_cvs_repo() {
 
 function current_svn_rev() {
    if [[ -d .svn ]] ; then
-      echo "SVN: r$(LANG=en_US svn info | \
+      echo "SVN: r$(svn info | \
          sed -n -e '/^Revision: \([0-9]*\).*$/s//\1/p')"
    fi
 }
 
 function current_scm_info() {
-   local mygitinfo=$(current_git_branch)
+   local mygitinfo="$(current_git_branch)"
+
+   if [ -z $SCM_INFO_FORMAT ]; then
+      SCM_INFO_FORMAT="(%s)"
+   fi
+
    if [[ -n ${mygitinfo} ]] ; then
       if [[ -d $(git_root)/.git/svn ]]; then
-         echo "(s'${mygitinfo})"
+         printf $SCM_INFO_FORMAT "s'${mygitinfo}"
       else
-         echo "(${mygitinfo})"
+         printf $SCM_INFO_FORMAT "${mygitinfo}"
       fi
       return
    fi
 
    local mycvsinfo=$(current_cvs_repo)
    if [[ -n ${mycvsinfo} ]] ; then
-         echo "(${mycvsinfo})"
+         echo "${mycvsinfo}"
          return
    fi
 
    local mysvninfo=$(current_svn_rev)
    if [[ -n ${mysvninfo} ]] ; then
-         echo "(${mysvninfo})"
+         echo "${mysvninfo}"
    fi
 }
 
