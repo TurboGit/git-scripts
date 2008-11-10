@@ -122,7 +122,9 @@ done < $REP/.files
 
 if [[ -n "$MANIFEST" && -f $REP/.files.added ]]; then
     if [[ ! -f $REP/.manifest ]]; then
-	echo Files added, but $MANIFEST not updated
+	echo ""
+	echo Files added, but $MANIFEST not updated, consider adding:
+	git diff --cached --name-only --diff-filter=A
 	res=1
     else
 	while read fadded
@@ -138,7 +140,9 @@ fi
 
 if [[ -n "$MANIFEST" && -f $REP/.files.removed ]]; then
     if [[ ! -f $REP/.manifest ]]; then
-	echo Files removed, but $MANIFEST not updated
+	echo ""
+	echo Files removed, but $MANIFEST not updated, condider removing:
+	git diff --cached --name-only --diff-filter=D
 	res=1
     else
 	while read fremoved
