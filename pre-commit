@@ -32,32 +32,6 @@ CPYR=""
 EXCLUDE=""
 
 case "$REPOSIT_NAME" in
-   gps) CPYR="[[:space:]]Copyright[[:space:]]\(C\)[[:space:]]([12]\d\d\d-)?2\d\d\d,[[:space:]]AdaCore[[:space:]]"
-	SC_OPTS="-ign out -ign tmplt -ign sed -ign txt -H \
-        -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB \
-        -lang TXML $OWEB -lang Python -C -L -H \
-        -lang CSS $OWEB -lang Ada -d -h18 -cp -cy -sp -gnat05 -cf $CPYR"
-        EXCLUDE="\(design/tests\|distrib/\)"
-	;;
-   xmlada) CPYR="[[:space:]]Copyright[[:space:]]\(C\)[[:space:]]([12]\d\d\d-)?2\d\d\d,[[:space:]]AdaCore[[:space:]]"
-	SC_OPTS="-lang Ada -d -cp -cy -sp -gnat05 -cf $CPYR"
-	;;
-   gnat|ASIS) CPYR="[[:space:]]Copyright[[:space:]]\(C\)[[:space:]]([12]\d\d\d-)?2\d\d\d,[[:space:]](AdaCore|Free[[:space:]]Software[[:space:]]Foundation,[[:space:]]Inc.)[[:space:]]"
-	SC_OPTS="-L -lang Ada -d -cp -cy -sp -gnat05 -l79 -cf $CPYR"
-	;;
-   AWS) CPYR="[[:space:]]Copyright[[:space:]]\(C\)[[:space:]]([12]\d\d\d-)?2\d\d\d,[[:space:]]AdaCore[[:space:]]"
-	SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
-        -lang TXML $OWEB -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB \
-        -lang CSS $OWEB -lang Ada -d -cp -cy -sp -gnat05 -cf $CPYR \
-	-lang makefile -cp -cy -cf $CPYR -lang Python -H"
-        EXCLUDE="\(features\)"
-	MANIFEST="MANIFEST"
-	;;
-   templates_parser) CPYR="[[:space:]]Copyright[[:space:]]\(C\)[[:space:]]([12]\d\d\d-)?2\d\d\d,[[:space:]]AdaCore[[:space:]]"
-	SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
-        -lang TXML $OWEB -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB \
-        -lang CSS $OWEB -lang Ada -d -cp -cy -sp -gnat05 -cf $CPYR"
-	;;
    v2p) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
         -lang Ada -d -cp -cy -sp -gnat05 -lang TXML $OWEB -lang Script -H \
         -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
@@ -67,6 +41,10 @@ case "$REPOSIT_NAME" in
         -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
 	;;
 esac
+
+# Source .git-pre-commit hook for user's defined rules
+
+[ -f $HOME/.git-pre-commit ] && source $HOME/.git-pre-commit $REPOSIT_NAME
 
 # Process each file
 
