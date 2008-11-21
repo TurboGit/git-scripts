@@ -93,7 +93,7 @@ get_new_branch () {
 
    echo Finding branch point
    rsvn=$(svn log --verbose $URL \
-       | grep -B0 -A20 -G "A /.*/$branch_name" \
+       | grep -B0 -A20 -G "A /.*/$branch_name " \
        | grep -E "^r[0-9]+ " | head -1 | cut -d' ' -f1 | cut -c2-)
 
    echo Subversion branch point: $rsvn
