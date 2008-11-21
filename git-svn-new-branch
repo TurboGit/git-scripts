@@ -1,6 +1,6 @@
 #! /bin/sh
 
-USAGE='URL [-f|-h|--help|--abort] [branch_name]'
+USAGE='[-f|-h|--help|--abort] URL [branch_name]'
 LONG_USAGE='URL is full url to subversion branch
 branch_name is the name of the branch to use locally
    (optional, in this case use subversion branch name)
@@ -141,18 +141,19 @@ case "$#" in
     usage ;;
 *)
     cmd="$1"
-    shift
     case "$cmd" in
     -h|*help)
         usage ;;
     *abort)
         abort ;;
     -f|-force)
+	shift
         force=1 ;
         test "$#" != 0 || usage
         get_new_branch "$@" ;;
     *)
         test "$#" != 0 || usage
+        force=0 ;
         get_new_branch "$@" ;;
     esac
 esac
