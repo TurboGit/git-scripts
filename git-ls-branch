@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# List the most recently-active (10 by default) branches
+
+USAGE='[-h|--help|-<N>]'
+LONG_USAGE='list the N most recently-active branches
+   (N is optional, default to 8)
+'
+
+exec_path=$(git --exec-path)
+. $exec_path/git-sh-setup
+require_work_tree
+
+# Output format string
+
+fmt='
+      spaces="                                        "
+      r=%(refname:short)
+      s=%(subject)
+      sr=$(echo $r | wc -c)
+      pad1=$((45 - $sr))
+      if [[ "$pad1" < "0" ]]; then
+         echo $r "%09" $s;
+      else
+         echo $r "${spaces:1:$pad1}" $s;
+      fi;
+    '
+list_branches ()
+{
+    count=$1
+    result=$(git for-each-ref --shell --format="$fmt" \
+	--sort=-authordate --count=$count refs/heads/)
+    eval "$result"
+}
+
+case "$#" in
+0)
+    list_branches 8 ;;
+*)
+    cmd="$1"
+    case "$cmd" in
+    -h|*help)
+        usage ;;
+    *)
+	list_branches ${cmd:1} ;;
+    esac
+esac
