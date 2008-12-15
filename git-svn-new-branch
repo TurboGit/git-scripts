@@ -1,6 +1,6 @@
 #! /bin/sh
 
-USAGE='[-f|-h|--help|--abort] URL [branch_name]'
+USAGE='abort|branch_point|attach|checkout [--dry-run] URL [branch_name]'
 LONG_USAGE='URL is full url to subversion branch
 branch_name is the name of the branch to use locally
    (optional, in this case use subversion branch name)
@@ -32,8 +32,9 @@ abort () {
       sed -e s"/BRANCH_NAME: //")
    git checkout $head
    git update-ref -d refs/remotes/$branch_name
-   git branch -D svn-$branch_name
    find .git -name "*_map*" -print -exec rm -f {} \;
+   git branch -D svn-$branch_name
+
 }
 
 get_new_branch () {
@@ -46,6 +47,11 @@ get_new_branch () {
 
    rm -f .git/SVN_NEW_BRANCH
    echo HEAD: ${head#refs/heads/} >> .git/SVN_NEW_BRANCH
+
+   if [ "$1" = "--dry-run" ]; then
+      dryrun=True
+      shift
+   fi
 
    URL=$1
 
@@ -91,27 +97,48 @@ get_new_branch () {
    git svn fetch --no-follow-parent svn-$branch_name
    git branch --track svn-$branch_name $branch_name
 
+   echo Only branch history has been fetched, consider using
+   echo git-svn-new-branch attach URL
+   echo to attach the old history to the branch.
+
+}
+
+attach_branch () {
+   URL=$1
+   if [ "$2" = "" ]; then
+       branch_name=$(basename $URL)
+   else
+       branch_name=$2
+   fi
+
    echo Finding branch point
-   rsvn=$(svn log --verbose $URL \
-       | grep -B0 -A20 -G "A /.*/$branch_name " \
-       | grep -E "^r[0-9]+ " | head -1 | cut -d' ' -f1 | cut -c2-)
+   rsvn=$(get_branch_point $URL)
+   if [ "$rsvn" = "" ]; then
+      echo "Can not find branch point"
+      exit 1
+   fi
 
    echo Subversion branch point: $rsvn
 
-   rgit=$(git svn find-rev r$rsvn)
+
+   nrsvn=$(find_nearest_rev $rsvn)
+   rgit=$(git svn find-rev r$nrsvn)
    # Run it twice to avoid the svn rebuilding .rev_map messages
-   rgit=$(git svn find-rev r$rsvn)
+   rgit=$(git svn find-rev r$nrsvn)
+
+   if [ "$rgit" = "" ]; then
+      echo "Can not find corresponding Git rev !"
+      exit 1
+   fi
 
    echo Corresponding Git revision: $rgit
    echo
 
-   git log $rgit^..$rgit
+   git log $rgit^..$rgit | cat -
 
    if test $force = 0
    then
       echo
-      echo Only branch history has been fetched, consider using filter-branch
-      echo to attach the old history to the branch.
       echo
       echo $ git filter-branch -f --tag-name-filter cat \\
       echo "   "--parent-filter \"sed -e 's/^$/-p $rgit/'\" \\
@@ -122,6 +149,8 @@ get_new_branch () {
       echo $ git svn rebase
       echo
    else
+      echo Checkout local branch
+      git checkout svn-$branch_name
       (
          git filter-branch -f --tag-name-filter cat \
             --parent-filter "sed -e 's/^$/-p $rgit/'" svn-$branch_name &&
@@ -131,29 +160,50 @@ get_new_branch () {
          git svn rebase
       ) || die "Failed ! Use --abort to revert all changes"
 
-      echo Checkout local branch
-      git checkout svn-$branch_name
    fi
 }
 
-case "$#" in
-0)
-    usage ;;
-*)
-    cmd="$1"
-    case "$cmd" in
-    -h|*help)
-        usage ;;
-    *abort)
-        abort ;;
-    -f|-force)
-	shift
-        force=1 ;
-        test "$#" != 0 || usage
-        get_new_branch "$@" ;;
-    *)
-        test "$#" != 0 || usage
-        force=0 ;
-        get_new_branch "$@" ;;
-    esac
-esac
+get_branch_point () {
+   branch=$1
+   rev=$(svn log --verbose --stop-on-copy $branch | grep '(from' |
+      grep -E -o ":([0-9]+)" | cut -c2-)
+   echo $rev
+}
+
+find_nearest_rev () {
+   rev=$1
+   nrev=$(
+      (
+         echo r$rev;
+         git svn log --oneline | grep -o -E 'r[0-9]+'
+      ) | sort | grep r$rev -B1 | head -1 | cut -c2-)
+   echo $nrev
+}
+
+while [ "$#" != "0" ]; do
+   case $1 in
+      -h|*help)
+         usage;;
+      *abort)
+         abort;
+         exit $?
+         ;;
+      *branch-point)
+         shift
+         test $1 != "" && get_branch_point $@
+         ;;
+      *attach)
+         shift
+         test $1 != "" && attach_branch $@
+         ;;
+      *find-nearest-rev)
+         shift
+         test $1 != "" && find_nearest_rev $@
+         ;;
+      *checkout)
+         shift
+         test $1 != "" && get_new_branch $@;;
+      *)
+         shift;;
+   esac
+done
