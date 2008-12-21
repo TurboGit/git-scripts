@@ -1,6 +1,6 @@
 #! /bin/sh
 
-USAGE='abort|branch_point|attach|checkout [--dry-run] URL [branch_name]'
+USAGE='abort|branch-point|attach|checkout [--dry-run] URL [branch_name]'
 LONG_USAGE='URL is full url to subversion branch
 branch_name is the name of the branch to use locally
    (optional, in this case use subversion branch name)
@@ -98,7 +98,7 @@ get_new_branch () {
    git branch --track svn-$branch_name $branch_name
 
    echo Only branch history has been fetched, consider using
-   echo git-svn-new-branch attach URL
+   echo git svn-new-branch attach URL
    echo to attach the old history to the branch.
 
 }
@@ -119,7 +119,6 @@ attach_branch () {
    fi
 
    echo Subversion branch point: $rsvn
-
 
    nrsvn=$(find_nearest_rev $rsvn)
    rgit=$(git svn find-rev r$nrsvn)
