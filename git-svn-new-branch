@@ -165,7 +165,7 @@ attach_branch () {
 get_branch_point () {
    branch=$1
    rev=$(svn log --verbose --stop-on-copy $branch | grep '(from' |
-      grep -E -o ":([0-9]+)" | cut -c2-)
+      grep -E -o ":([0-9]+)" | cut -c2- | tail -1)
    echo $rev
 }
 
