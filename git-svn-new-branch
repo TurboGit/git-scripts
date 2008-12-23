@@ -26,14 +26,20 @@ require_clean_work_tree () {
 }
 
 abort () {
+   echo $1
+   if [ "$1" = "--dry-run" ]; then
+      dryrun=echo
+      echo "Restart without --dry-run if you want to execute"\
+         "the following commands:"
+   fi
    require_clean_work_tree
    head=$(grep HEAD .git/SVN_NEW_BRANCH | sed -e "s/HEAD: //")
    branch_name=$(grep BRANCH_NAME .git/SVN_NEW_BRANCH |
       sed -e s"/BRANCH_NAME: //")
-   git checkout $head
-   git update-ref -d refs/remotes/$branch_name
-   find .git -name "*_map*" -print -exec rm -f {} \;
-   git branch -D svn-$branch_name
+   $dryrun git checkout $head
+   $dryrun git update-ref -d refs/remotes/$branch_name
+   $dryrun find .git -name "*_map*" -print -exec rm -f {} \;
+   $dryrun git branch -D svn-$branch_name
 
 }
 
@@ -86,20 +92,26 @@ get_new_branch () {
       die The given URL does not exists.
    fi
 
-   git config svn-remote.svn-$branch_name.url $URL
-   git config svn-remote.svn-$branch_name.fetch :refs/remotes/$branch_name
+   if [ $dryrun != "" ]; then
+      git config svn-remote.svn-$branch_name.url $URL
+      git config svn-remote.svn-$branch_name.fetch :refs/remotes/$branch_name
 
-   echo Fetch branch data
-   git svn fetch --no-follow-parent svn-$branch_name
-   git branch --track svn-$branch_name $branch_name
+      echo Fetch branch data
+      git svn fetch --no-follow-parent svn-$branch_name
+      git branch --track svn-$branch_name $branch_name
 
-   echo Only branch history has been fetched, consider using
-   echo git svn-new-branch attach URL
-   echo to attach the old history to the branch.
-
+      echo Only branch history has been fetched, consider using
+      echo git svn-new-branch attach URL
+      echo to attach the old history to the branch.
+   fi
 }
 
 attach_branch () {
+   if [ "$1" = "--dry-run" ]; then
+      dryrun=True
+      shift
+   fi
+
    URL=$1
    if [ "$2" = "" ]; then
        branch_name=$(basename $URL)
@@ -129,8 +141,7 @@ attach_branch () {
 
    git log $rgit^..$rgit | cat -
 
-   if test $force = 0
-   then
+   if [ "$dryrun" != "" ]; then
       echo
       echo
       echo $ git filter-branch -f --tag-name-filter cat \\
@@ -178,7 +189,8 @@ while [ "$#" != "0" ]; do
       -h|*help)
          usage;;
       *abort)
-         abort;
+         shift
+         abort $@;
          exit $?
          ;;
       *branch-point)
