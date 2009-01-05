@@ -178,9 +178,9 @@ find_nearest_rev () {
    rev=$1
    nrev=$(
       (
-         echo r$rev;
-         git svn log --oneline | grep -o -E 'r[0-9]+'
-      ) | sort | grep r$rev -B1 | head -1 | cut -c2-)
+         echo $rev;
+         git svn log --oneline | grep -o -E 'r[0-9]+' | cut -c2-
+      ) | sort -n | grep -E '^$rev' -B1 | head -1 | cut -c2-)
    echo $nrev
 }
 
