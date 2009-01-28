@@ -1,9 +1,30 @@
 #! /bin/sh
 
-USAGE='abort|branch-point|attach|checkout [--dry-run] URL [branch_name]'
-LONG_USAGE='URL is full url to subversion branch
-branch_name is the name of the branch to use locally
-   (optional, in this case use subversion branch name)
+USAGE='abort|branch-point|checkout|attach [--dry-run] URL [branch_name]'
+LONG_USAGE='   Commands:
+
+      abort        : to abort an import
+      branch-point : return branch point svn revision
+      checkout     : retrieve a new branch
+      attach       : attach previously imported (see above) branch to
+                     corresponding branch point.
+   Options:
+
+      URL          : the full url to subversion branch
+      branch_name  : the name of the remote branch to use
+                     (default is the name of the subversion branch)
+                     the local branch name is prefixed with "svn-"
+      --dry-run    : nothing will changed in the local Git repository
+
+   A common usage is:
+
+      $ git svn-new-branch checkout svn+ssh://server/svn/branches/relA
+      $ git svn-new-branch attach svn+ssh://server/svn/branches/relA
+
+   Before attaching, it is possible to check the branch-point that will be
+   used to connect the branch history to the master:
+
+      $ git svn-new-branch branch-point svn+ssh://server/svn/branches/relA
 '
 
 OPTIONS_SPEC=
