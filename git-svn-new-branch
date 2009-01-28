@@ -124,7 +124,7 @@ get_new_branch () {
       git branch --track svn-$branch_name $branch_name
 
       echo Only branch history has been fetched, consider using
-      echo git svn-new-branch attach URL
+      echo git svn-new-branch attach $URL $branch_name
       echo to attach the old history to the branch.
    fi
 }
