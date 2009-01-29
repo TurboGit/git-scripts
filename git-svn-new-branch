@@ -222,19 +222,19 @@ while [ "$#" != "0" ]; do
          ;;
       *branch-point)
          shift
-         test $1 != "" && get_branch_point $@
+         test "$1" != "" && get_branch_point $@
          ;;
       *attach)
          shift
-         test $1 != "" && attach_branch $@
+         test "$1" != "" && attach_branch $@
          ;;
       *find-nearest-rev)
          shift
-         test $1 != "" && find_nearest_rev $@
+         test "$1" != "" && find_nearest_rev $@
          ;;
       *checkout)
          shift
-         test $1 != "" && get_new_branch $@;;
+         test "$1" != "" && get_new_branch $@;;
       *)
          shift;;
    esac
