@@ -1,0 +1,54 @@
+#!/bin/sh
+
+# List all commits done on topic branche
+
+USAGE='[options|-h] topic [branch_name]'
+LONG_USAGE='List all commits done on topic branche
+   options to pass to git log
+   branch is optional, default to master
+'
+
+if [ "$1" == "" ]; then
+   echo $0 topic_branch
+fi
+
+topic=$1
+
+if [ "$2" == "" ]; then
+   branch=master
+else
+   branch=$2
+fi
+
+exec_path=$(git --exec-path)
+. $exec_path/git-sh-setup
+
+options=
+
+list_commits () {
+    topic=$1
+    branch=$2
+    git log $options \
+	$(git rev-list --boundary $topic...$branch | grep ^- | cut -c2- \
+	| ( read one; read two; echo $one...$two ))
+}
+
+[ "$#" == "0" ] && usage && exit 1;
+
+branch=master
+
+while [ "$#" != "0" ]; do
+   case $1 in
+      -h|*help)
+         usage;;
+      -*)
+	 options="$options $1"
+         shift;;
+      *)
+         topic=$1
+	 shift
+	 test "$1" != "" && branch=$1
+         list_commits $topic $branch
+         exit 0;;
+   esac
+done
