@@ -30,7 +30,7 @@ list_commits () {
     branch=$2
     git log $options \
 	$(git rev-list --boundary $topic...$branch | grep ^- | cut -c2- \
-	| ( read one; read two; echo $one...$two ))
+	| ( read one; echo $one...$topic ))
 }
 
 [ "$#" == "0" ] && usage && exit 1;
