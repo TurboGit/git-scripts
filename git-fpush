@@ -4,9 +4,11 @@
 # can be used to workaround that.
 # The branch is first deleted and push back.
 
-if [[ "$1" = "" ]]; then
-   echo git fpush branch_name;
-   exit 1;
+branch=$1
+
+if [ "$1" = "" ]; then
+   # Use current branch
+   branch=`git branch | egrep '^\* ' | cut -f2 -d' '`
 fi
 
-git push origin :$1 && git push origin $1
+git push origin :$branch && git push origin $branch
