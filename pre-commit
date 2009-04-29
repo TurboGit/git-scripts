@@ -37,7 +37,7 @@ case "$REPOSIT_NAME" in
         -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
 	;;
    *) SC_OPTS="-ign out -ign tmplt -ign sed -ign txt \
-        -lang Ada -cp -cy -sp -gnat05 -lang TXML $OWEB \
+        -lang Ada -H -cP -cY -sp -gnat05 -lang TXML $OWEB \
         -lang XML $OWEB -lang HTML $OWEB -lang XSD $OWEB -lang CSS $OWEB"
 	;;
 esac
