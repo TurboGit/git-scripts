@@ -20,9 +20,9 @@ fmt='
       sr=$(echo $r | wc -c)
       pad1=$((45 - $sr))
       if [[ "$pad1" < "0" ]]; then
-         echo $r "%09" $s;
+         echo $r "%09" "$s";
       else
-         echo $r "${spaces:1:$pad1}" $s;
+         echo $r "${spaces:1:$pad1}" "$s";
       fi;
     '
 list_branches ()
