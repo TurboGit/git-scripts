@@ -1,7 +1,10 @@
 #! /bin/sh
 
+program=$0
+
+prefix="svn-"
 USAGE='abort|branch-point|checkout|attach [--dry-run] URL [branch_name]'
-LONG_USAGE='   Commands:
+LONG_USAGE="   Commands:
 
       abort        : to abort an import
       branch-point : return branch point svn revision
@@ -13,8 +16,10 @@ LONG_USAGE='   Commands:
       URL          : the full url to subversion branch
       branch_name  : the name of the remote branch to use
                      (default is the name of the subversion branch)
-                     the local branch name is prefixed with "svn-"
+                     the local branch name is the basename of this name,
+                     prefixed with '$prefix'
       --dry-run    : nothing will changed in the local Git repository
+      --prefix=name : prefix to apply to the name of the local branch
 
    A common usage is:
 
@@ -25,10 +30,9 @@ LONG_USAGE='   Commands:
    used to connect the branch history to the master:
 
       $ git svn-new-branch branch-point svn+ssh://server/svn/branches/relA
-'
+"
 
 OPTIONS_SPEC=
-
 
 exec_path=$(git --exec-path)
 . $exec_path/git-sh-setup
@@ -46,13 +50,53 @@ require_clean_work_tree () {
    die "Working tree is dirty"
 }
 
-abort () {
-   echo $1
-   if [ "$1" = "--dry-run" ]; then
-      dryrun=echo
-      echo "Restart without --dry-run if you want to execute"\
-         "the following commands:"
+parse_command_line () {
+   requires_url=${1:-True}
+   dryrun=""
+
+   shift  # remove requires_url
+
+   TEMP=`getopt -o dp: --long dry-run,prefix: -n git-svn-new-branch -- "$@"`
+   if [ $? != 0 ]; then exit 1; fi
+   eval set -- "$TEMP" 
+
+   while true ; do
+     case "$1" in
+        -d|--dry-run) dryrun=echo;
+                      echo "Restart without --dry-run if you want to execute"\
+                           "the following commands:"
+                      shift;;
+        -p|--prefix)  prefix="$2"; shift 2;;
+        --) shift; break ;;
+        *) exit 1;;
+     esac
+   done 
+
+   if [ $requires_url = True ]; then
+      URL=$1
+
+      if [ "$URL" == "" ]; then
+         echo "Missing URL"
+         exit 1
+      fi
+
+      if [ "$2" = "" ]; then
+         branch_name=$(basename $URL)
+         local_branch=$prefix$branch_name
+      else
+         branch_name=$2
+         local_branch=$prefix$(basename $branch_name)
+      fi
+
+      echo
+      echo Track $URL on branch: $branch_name
+      echo on local branch : $local_branch
+      echo
    fi
+}
+
+abort () {
+   parse_command_line False "$@"
    require_clean_work_tree
    head=$(grep HEAD .git/SVN_NEW_BRANCH | sed -e "s/HEAD: //")
    branch_name=$(grep BRANCH_NAME .git/SVN_NEW_BRANCH |
@@ -60,7 +104,7 @@ abort () {
    $dryrun git checkout $head
    $dryrun git update-ref -d refs/remotes/$branch_name
    $dryrun find .git -name "*_map*" -print -exec rm -f {} \;
-   $dryrun git branch -D svn-$branch_name
+   $dryrun git branch -D $local_branch
 
 }
 
@@ -75,27 +119,9 @@ get_new_branch () {
    rm -f .git/SVN_NEW_BRANCH
    echo HEAD: ${head#refs/heads/} >> .git/SVN_NEW_BRANCH
 
-   if [ "$1" = "--dry-run" ]; then
-      dryrun=True
-      shift
-   else
-      dryrun=False
-   fi
-
-   URL=$1
-
-   if [ "$2" = "" ]; then
-       branch_name=$(basename $URL)
-   else
-       branch_name=$2
-   fi
+   parse_command_line True "$@"
 
    echo BRANCH_NAME: $branch_name >> .git/SVN_NEW_BRANCH
-
-   echo
-   echo Track $URL on $branch_name
-   echo Local branch : svn-$branch_name
-   echo
 
    echo Check if local branches exist
 
@@ -103,8 +129,8 @@ get_new_branch () {
        die Remote branch $branch_name already imported.
    fi
 
-   if [ "$(git branch | grep svn-$branch_name)" != "" ]; then
-       die Local branch svn-$branch_name already present.
+   if [ "$(git branch | grep $local_branch)" != "" ]; then
+       die Local branch $local_branch already present.
    fi
 
    echo Check if remote branch exists
@@ -115,34 +141,22 @@ get_new_branch () {
       die The given URL does not exists.
    fi
 
-   if [ "$dryrun" != "True" ]; then
-      git config svn-remote.svn-$branch_name.url $URL
-      git config svn-remote.svn-$branch_name.fetch :refs/remotes/$branch_name
+   if [ "$dryrun" == "" ]; then
+      git config svn-remote.$local_branch.url $URL
+      git config svn-remote.$local_branch.fetch :refs/remotes/$branch_name
 
       echo Fetch branch data
-      git svn fetch --no-follow-parent svn-$branch_name
-      git branch --track svn-$branch_name $branch_name
+      git svn fetch --no-follow-parent $local_branch
+      git branch --track $local_branch $branch_name
 
       echo Only branch history has been fetched, consider using
-      echo git svn-new-branch attach $URL $branch_name
+      echo $program attach --prefix=\"$prefix\" $URL $branch_name
       echo to attach the old history to the branch.
    fi
 }
 
 attach_branch () {
-   if [ "$1" = "--dry-run" ]; then
-      dryrun=True
-      shift
-   else
-      dryrun=False
-   fi
-
-   URL=$1
-   if [ "$2" = "" ]; then
-       branch_name=$(basename $URL)
-   else
-       branch_name=$2
-   fi
+   parse_command_line True "$@"
 
    echo Finding branch point
    rsvn=$(get_branch_point $URL)
@@ -166,30 +180,16 @@ attach_branch () {
 
    git log $rgit^..$rgit | cat -
 
-   if [ "$dryrun" = "True" ]; then
-      echo
-      echo
-      echo $ git filter-branch -f --tag-name-filter cat \\
-      echo "   "--parent-filter \"sed -e 's/^$/-p $rgit/'\" \\
-      echo "   svn-$branch_name"
-      echo $ git reset --hard svn-$branch_name
-      echo $ git update-ref refs/remotes/$branch_name svn-$branch_name
-      echo $ find .git -name "*_map*" -print -exec rm -f {} \;
-      echo $ git svn rebase
-      echo
-   else
-      echo Checkout local branch
-      git checkout svn-$branch_name
-      (
-         git filter-branch -f --tag-name-filter cat \
-            --parent-filter "sed -e 's/^$/-p $rgit/'" svn-$branch_name &&
-         git reset --hard svn-$branch_name &&
-         git update-ref refs/remotes/$branch_name svn-$branch_name &&
-         find .git -name "*_map*" -print -exec rm -f {} \; &&
-         git svn rebase
-      ) || die "Failed ! Use --abort to revert all changes"
-
-   fi
+   echo Checkout local branch
+   $dryrun git checkout $local_branch
+   (
+      $dryrun git filter-branch -f --tag-name-filter cat \
+         --parent-filter "sed -e 's/^$/-p $rgit/'" $local_branch &&
+      $dryrun git reset --hard $local_branch &&
+      $dryrun git update-ref refs/remotes/$branch_name $local_branch &&
+      $dryrun find .git -name "*_map*" -print -exec rm -f {} \; &&
+      $dryrun git svn rebase
+   ) || die "Failed ! Use --abort to revert all changes"
 }
 
 get_branch_point () {
@@ -211,31 +211,30 @@ find_nearest_rev () {
 
 test "$#" = "0" && usage && exit 1;
 
-while [ "$#" != "0" ]; do
-   case $1 in
-      -h|*help)
-         usage;;
-      *abort)
-         shift
-         abort $@;
-         exit $?
-         ;;
-      *branch-point)
-         shift
-         test "$1" != "" && get_branch_point $@
-         ;;
-      *attach)
-         shift
-         test "$1" != "" && attach_branch $@
-         ;;
-      *find-nearest-rev)
-         shift
-         test "$1" != "" && find_nearest_rev $@
-         ;;
-      *checkout)
-         shift
-         test "$1" != "" && get_new_branch $@;;
-      *)
-         shift;;
-   esac
-done
+case $1 in
+   -h|*help)
+      usage;;
+   *abort)
+      shift
+      abort "$@";
+      exit $?
+      ;;
+   *branch-point)
+      shift
+      test "$1" != "" && get_branch_point "$@"
+      ;;
+   *attach)
+      shift
+      attach_branch "$@"
+      ;;
+   *find-nearest-rev)
+      shift
+      test "$1" != "" && find_nearest_rev "$@"
+      ;;
+   *checkout)
+      shift
+      test "$1" != "" && get_new_branch "$@";;
+   *)
+      echo "Invalid command : $1"
+      exit 1;;
+esac
