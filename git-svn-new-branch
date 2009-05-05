@@ -167,12 +167,18 @@ attach_branch () {
    echo Subversion branch point: $rsvn
 
    nrsvn=$(find_nearest_rev $rsvn)
+
    rgit=$(git svn find-rev r$nrsvn)
    # Run it twice to avoid the svn rebuilding .rev_map messages
    rgit=$(git svn find-rev r$nrsvn)
 
    if [ "$rgit" = "" ]; then
-      die "Can not find corresponding Git rev !"
+      echo "Can not find corresponding Git rev !"
+      echo "Maybe the subversion repository is set incorrectly, trying different approach"
+      rgit=$(find_previous_svn_rev $URL)
+      if [ "$rgit" = "" ]; then
+         die "Could not find git revision for branch point"
+      fi
    fi
 
    echo Corresponding Git revision: $rgit
@@ -197,6 +203,33 @@ get_branch_point () {
    rev=$(svn log --verbose --stop-on-copy $branch | grep '(from' |
       grep -E -o ":([0-9]+)" | cut -c2- | tail -1)
    echo $rev
+}
+
+find_previous_svn_rev () {
+   branch=$1
+   rev_on_branch=$(svn log -q --stop-on-copy $branch | fgrep r | wc -l)
+
+   # "+5" is to give us some more revisions to work with, in case the svn
+   # repository is really messed up
+   fetch=`expr $rev_on_branch + 5`
+   prev=$(svn log -q $branch | fgrep r | head -$fetch | grep -o -E 'r[0-9]+' | cut -c2-)
+
+   for p in $prev; do
+      # When the repository is messed up, it seems that "find-rev" will not
+      # work correctly either, so try differently
+      # rgit=$(git svn find-rev r$p)
+
+      rgit=$(git log | grep -e commit -e git-svn-id | grep "@$p " -B1 | head -1 | cut -f2 -d\  )
+
+      if [ "$rgit" != "" ]; then
+         echo $rgit
+         return
+      else
+         echo "No matching git revision for subversion's $p" >/dev/stderr
+      fi
+   done
+
+   echo "" 
 }
 
 find_nearest_rev () {
