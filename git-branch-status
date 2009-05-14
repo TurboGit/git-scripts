@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 # This script uses git branch and rev-list commands to output changes between
 # branches.

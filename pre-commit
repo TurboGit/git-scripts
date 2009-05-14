@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 GNATROOT=/opt/gnat/2007
 

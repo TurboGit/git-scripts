@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/bash
 
 # Look for the Git root directory
 ROOT=`pwd`
