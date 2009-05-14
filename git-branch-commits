@@ -29,8 +29,8 @@ list_commits () {
     topic=$1
     branch=$2
     git log $options \
-	$(git rev-list --boundary $topic...$branch | grep ^- | cut -c2- \
-	| ( read one; echo $one...$topic ))
+    $(git rev-list --boundary $topic...$branch | grep ^- | cut -c2- \
+    | ( read one; echo $one...$topic ))
 }
 
 [ "$#" == "0" ] && usage && exit 1;
@@ -42,12 +42,12 @@ while [ "$#" != "0" ]; do
       -h|*help)
          usage;;
       -*)
-	 options="$options $1"
+         options="$options $1"
          shift;;
       *)
          topic=$1
-	 shift
-	 test "$1" != "" && branch=$1
+         shift
+         test "$1" != "" && branch=$1
          list_commits $topic $branch
          exit 0;;
    esac
