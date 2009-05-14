@@ -8,13 +8,13 @@ LONG_USAGE='List all commits done on topic branche
    branch is optional, default to master
 '
 
-if [ "$1" == "" ]; then
+if [ "$1" = "" ]; then
    echo $0 topic_branch
 fi
 
 topic=$1
 
-if [ "$2" == "" ]; then
+if [ "$2" = "" ]; then
    branch=master
 else
    branch=$2
@@ -33,7 +33,7 @@ list_commits () {
     | ( read one; echo $one...$topic ))
 }
 
-[ "$#" == "0" ] && usage && exit 1;
+test "$#" = "0" && usage && exit 1;
 
 branch=master
 

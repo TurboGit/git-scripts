@@ -84,7 +84,7 @@ get_new_branch () {
 
    URL=$1
 
-   if [[ "$2" == "" ]]; then
+   if [ "$2" = "" ]; then
        branch_name=$(basename $URL)
    else
        branch_name=$2
@@ -99,11 +99,11 @@ get_new_branch () {
 
    echo Check if local branches exist
 
-   if [[ "$(git branch -r | grep $branch_name)" != "" ]]; then
+   if [ "$(git branch -r | grep $branch_name)" != "" ]; then
        die Remote branch $branch_name already imported.
    fi
 
-   if [[ "$(git branch | grep svn-$branch_name)" != "" ]]; then
+   if [ "$(git branch | grep svn-$branch_name)" != "" ]; then
        die Local branch svn-$branch_name already present.
    fi
 
@@ -130,7 +130,7 @@ get_new_branch () {
 }
 
 attach_branch () {
-   if [ "$1" == "--dry-run" ]; then
+   if [ "$1" = "--dry-run" ]; then
       dryrun=True
       shift
    else
@@ -166,7 +166,7 @@ attach_branch () {
 
    git log $rgit^..$rgit | cat -
 
-   if [ "$dryrun" == "True" ]; then
+   if [ "$dryrun" = "True" ]; then
       echo
       echo
       echo $ git filter-branch -f --tag-name-filter cat \\
@@ -209,7 +209,7 @@ find_nearest_rev () {
    echo $nrev
 }
 
-[ "$#" == "0" ] && usage && exit 1;
+test "$#" = "0" && usage && exit 1;
 
 while [ "$#" != "0" ]; do
    case $1 in
