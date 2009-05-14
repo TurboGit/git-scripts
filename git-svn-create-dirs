@@ -23,8 +23,8 @@ while read entry
 do
    if [ "${entry: -1:1}" == "/" ]; then
       if [ ! -d "$entry" ]; then
-      	 echo create $entry
-	 mkdir -p $entry
+         echo create $entry
+         mkdir -p $entry
       fi
    fi
 done < $FILE
