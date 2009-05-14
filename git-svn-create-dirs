@@ -12,9 +12,7 @@ if [ ! -f .git/config ]; then
 fi;
 
 FS=" ="
-svnrepo=`awk '$1=="[svn-remote"{GET=1} \
-    $1=="url" && GET==1 {print $3}' .git/config`
-
+svnrepo=`git svn info | grep URL | cut -f2 -d' '`
 echo Looking for empty directories from $svnrepo
 
 FILE=/tmp/files-$$
