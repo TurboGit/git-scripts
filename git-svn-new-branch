@@ -6,19 +6,19 @@ prefix="svn-"
 USAGE='abort|branch-point|checkout|attach [--dry-run] URL [branch_name]'
 LONG_USAGE="   Commands:
 
-      abort        : to abort an import
-      branch-point : return branch point svn revision
-      checkout     : retrieve a new branch
-      attach       : attach previously imported (see above) branch to
-                     corresponding branch point.
+      abort         : to abort an import
+      branch-point  : return branch point svn revision
+      checkout      : retrieve a new branch
+      attach        : attach previously imported (see above) branch to
+                      corresponding branch point.
    Options:
 
-      URL          : the full url to subversion branch
-      branch_name  : the name of the remote branch to use
-                     (default is the name of the subversion branch)
-                     the local branch name is the basename of this name,
-                     prefixed with '$prefix'
-      --dry-run    : nothing will changed in the local Git repository
+      URL           : the full url to subversion branch
+      branch_name   : the name of the remote branch to use
+                      (default is the name of the subversion branch)
+                      the local branch name is the basename of this name,
+                      prefixed with '$prefix'
+      --dry-run     : nothing will changed in the local Git repository
       --prefix=name : prefix to apply to the name of the local branch
 
    A common usage is:
@@ -58,7 +58,7 @@ parse_command_line () {
 
    TEMP=`getopt -o dp: --long dry-run,prefix: -n git-svn-new-branch -- "$@"`
    if [ $? != 0 ]; then exit 1; fi
-   eval set -- "$TEMP" 
+   eval set -- "$TEMP"
 
    while true ; do
      case "$1" in
@@ -70,7 +70,7 @@ parse_command_line () {
         --) shift; break ;;
         *) exit 1;;
      esac
-   done 
+   done
 
    if [ $requires_url = True ]; then
       URL=$1
@@ -229,7 +229,7 @@ find_previous_svn_rev () {
       fi
    done
 
-   echo "" 
+   echo ""
 }
 
 find_nearest_rev () {
