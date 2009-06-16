@@ -1,0 +1,50 @@
+#! /bin/sh
+
+program=$0
+
+USAGE=''
+
+LONG_USAGE="   Read wip file and display topic branch/log waiting for merging
+
+   The WIP file is found under .git/.wip. There is three kinds of line:
+
+      <empty>               : does nothing
+      --- <text>            : display --- <text> as-is
+      branch [branch-point] : output commits done on branch since branch-point
+                              Default value for branch-point is master.
+"
+
+exec_path=$(git --exec-path)
+. $exec_path/git-sh-setup
+require_work_tree
+cd_to_toplevel
+
+FILE=".git/.wip"
+
+display () {
+   branch=$1
+   from=${2:-master}
+
+   echo
+   echo "   $branch (from $from)"
+   git log --pretty="      %s" $branch ^$from
+}
+
+handle_line () {
+   line="$1"
+   first=$2
+
+   case "$first" in
+      "")    ;;
+      "---") echo; echo "$line";
+             ;;
+      *)     display $first $3;
+   esac
+}
+
+case $1 in
+   -h|*help)
+      usage;;
+   *)
+      while read line; do handle_line "$line" $line; done < $FILE
+esac
