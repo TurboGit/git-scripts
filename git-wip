@@ -52,6 +52,9 @@ handle_line () {
 case $1 in
    -h|*help)
       usage;;
-   *)
-      while read line; do handle_line "$line" $line; done < $FILE
+   *) if [ -f $FILE ]; then
+         while read line; do handle_line "$line" $line; done < $FILE;
+      else
+         echo No WIP description for this project.
+      fi
 esac
