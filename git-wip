@@ -24,9 +24,16 @@ FILE=".git/.wip"
 display () {
    branch=$1
    from=${2:-master}
-
+   n=$(git cherry $branch $from | wc | cut -d' ' -f6)
    echo
-   echo "   $branch (from $from)"
+   echo -n "$branch ($from"
+   if [ "$n" == "" ]; then
+       echo ")"
+   elif [ "$n" == "1" ]; then
+       echo " has diverged of 1 commit)"
+   else
+       echo " has diverged of $n commits)"
+   fi
    git log --pretty="      %s" $branch ^$from
 }
 
