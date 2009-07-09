@@ -180,6 +180,18 @@ check_commit()
 	fi
     fi
 
+    LOG=$(git log -1 --pretty="%s%n%b" $newrev)
+
+    # check for trac ticket
+
+    if [ -d "$TRAC_ENV" ]; then
+	$PYTHON /home/git/scripts/trac-pre-commit-hook "$TRAC_ENV" "$LOG"
+
+	if [ $? = 1 ]; then
+	    exit_status=1
+	fi;
+    fi
+
     rm -fr $root
 
     # --- Finished
