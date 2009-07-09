@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# An example hook script to prepare a packed repository for use over
+# dumb transports.
+#
+# To enable this hook, make this file executable by "chmod +x post-update".
+
+# exec git-update-server-info
+
+# --- Set trac envrionment (root trac directory for this project)
+
+PYTHON=/usr/bin/python
+TRAC_ENV=/home/trac/rootenv/gtest
+TRAC_URL=http://localhost:8000
+
+# --- Recover data for the post-commit script
+
+REV=$(git log -1 --pretty="%h")
+AUTHOR=$(git log -1 --pretty="%an")
+LOG=$(git log -1 --pretty="%s%n%b")
+
+$PYTHON /home/svn/scripts/trac-post-commit-hook \
+      -p "${TRAC_ENV}"  \
+      -r "$REV"       \
+      -u "$AUTHOR"    \
+      -m "$LOG"       \
+      -s "${TRAC_URL}/gtest" 2> /tmp/post_commit_err_${REV}
