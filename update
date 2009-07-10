@@ -59,7 +59,7 @@ check_commit() {
 	exit_status=1
     fi;
 
-    trac_pre_commit_check_log $newrev "gtest"
+    trac_update_check_log $oldrev $newrev "gtest"
 
     if [ $? = 1 ]; then
 	exit_status=1

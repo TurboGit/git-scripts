@@ -1,7 +1,7 @@
 
 # Tools
 
-STYLECHECKER=/opt/bin/style_checker
+STYLECHECKER=style_checker
 PYTHON=/usr/bin/python
 
 TRACENV=/home/trac/rootenv
@@ -9,7 +9,7 @@ TRACURL=http://localhost:8000
 
 # Path needed by some tools (style_checker)
 
-PATH=/opt/gnatpro/6.1.0w/bin:/usr/bin:/bin:/usr/local/bin:$PATH
+PATH=/opt/gnat/bin:/usr/bin:/bin:/usr/local/bin:$PATH
 export PATH
 
 # Style Check all files for a specific transaction
@@ -162,44 +162,54 @@ function log_not_empty() {
 
 # Post commit action to log message in Trac
 
-function trac_post_commit_record_log() {
-   MODULE="$1"
+function trac_post_receive_record_log() {
+    oldrev=$1
+    newrev=$2
+    ref=$3
+    MODULE="$4"
 
-   REV=$(git log -1 --pretty="%h")
-   AUTHOR=$(git log -1 --pretty="%an")
-   LOG=$(git log -1 --pretty="%s%n%b")
+    for csha in $(git log --pretty="%h"  $oldrev..$newrev); do
+	AUTHOR=$(git log -1 --pretty="%an" $csha)
+	LOG=$(git log -1 --pretty="%s%n%b" $csha)
    
-   $PYTHON /home/git/scripts/trac-post-commit-hook \
-       -p "${TRACENV}/$MODULE"  \
-       -r "$REV"       \
-       -u "$AUTHOR"    \
-       -m "$LOG"       \
-       -s "${TRACURL}/$MODULE" 2> /tmp/post_commit_err_${REV}
+	$PYTHON /home/git/scripts/trac-post-commit-hook \
+	    -p "${TRACENV}/$MODULE"  \
+	    -r "$csha"       \
+	    -u "$AUTHOR"    \
+	    -m "$LOG"       \
+	    -s "${TRACURL}/$MODULE" 2> /tmp/post_commit_err_$csha
+    done
 }
 
 # Pre commit action to log message in Trac
 
-function trac_pre_commit_check_log() {
-   REV="$1"
-   MODULE="$2"
+function trac_update_check_log() {
+    oldrev=$1
+    newrev=$2
+    MODULE="$3"
 
-   LOG=$(git log -1 --pretty="%s%n%b" $REV)
+    for csha in $(git log --pretty="%h"  $oldrev..$newrev); do
+	LOG=$(git log -1 --pretty="%s%n%b" $csha)
 
-   $PYTHON /home/git/scripts/trac-pre-commit-hook \
-       "$TRACENV/$MODULE" "$LOG" || return 1
+	$PYTHON /home/git/scripts/trac-pre-commit-hook \
+	    "$TRACENV/$MODULE" "$LOG" || return 1
+    done;
 
-   return 0;
+    return 0;
 }
 
 # Post commit send mail
 # Can be called with $4 = "--diff n" to skip log diff in e-mail
 
-function send_mail_post_commit() {
-    REPOS="$1"
-    REV="$2"
-    SUBJECT=$3
+function send_mail_post_receive() {
+    oldrev=$1
+    newrev=$2
+    ref=$3
+    MODULE="$4"
 
-    $CEMAIL -s "$SUBJECT" -h cln46mr "$REPOS" "$REV" $4 $5 $6 $7 $8 $9
+    git log -p $oldrev..$newrev > $log
+    cat $log | mail -s "[$MODULE] $ref $oldrev..$newrev" $5 $6 $7 $8 $9
+    rm -fr $root
 }
 
 # Post commit send xmpp
