@@ -168,13 +168,18 @@ function trac_post_receive_record_log() {
     ref=$3
     MODULE="$4"
 
-    for csha in $(git log --pretty="%h"  $oldrev..$newrev); do
-	AUTHOR=$(git log -1 --pretty="%an" $csha)
-	LOG=$(git log -1 --pretty="%s%n%b" $csha)
+    if expr "$oldrev" : "0*$" >/dev/null
+    then
+	git-rev-list "$newrev"
+    else
+	git-rev-list "$newrev" "^$oldrev"
+    fi | tac | while read csha ; do
+	AUTHOR="$(git-rev-list -n 1 $csha --pretty=format:%an | sed '1d')"
+	LOG="$(git-rev-list -n 1 $csha --pretty=medium | sed '1,3d;s:^    ::')"
    
 	$PYTHON /home/git/scripts/trac-post-commit-hook \
 	    -p "${TRACENV}/$MODULE"  \
-	    -r "$csha"       \
+	    -r "git:$USER:$(basename $PWD):$csha" \
 	    -u "$AUTHOR"    \
 	    -m "$LOG"       \
 	    -s "${TRACURL}/$MODULE" 2> /tmp/post_commit_err_$csha
