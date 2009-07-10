@@ -16,8 +16,11 @@
 
 read oldrev newrev ref
 
-trac_post_receive_record_log "$oldrev" "$newrev" "$ref" gtest
+while read oldrev newrev ref; do
+    trac_post_receive_record_log "$oldrev" "$newrev" "$ref" gtest
 
-send_mail_post_receive "$oldrev" "$newrev" "$ref" gtest mail1@here.com mail2@there.net
+    send_mail_post_receive "$oldrev" "$newrev" "$ref" gtest \
+	mail1@here.com mail2@there.net
+done
 
 # . /usr/share/doc/git-core/contrib/hooks/post-receive-email
