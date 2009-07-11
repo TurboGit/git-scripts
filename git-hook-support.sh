@@ -160,7 +160,7 @@ function log_not_empty() {
    return 0;
 }
 
-# Post commit action to log message in Trac
+# Post receive action to log message in Trac
 
 function trac_post_receive_record_log() {
     oldrev=$1
@@ -186,7 +186,7 @@ function trac_post_receive_record_log() {
     done
 }
 
-# Pre commit action to log message in Trac
+# Pre update action to check for proper ticket
 
 function trac_update_check_log() {
     oldrev=$1
