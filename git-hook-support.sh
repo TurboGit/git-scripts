@@ -193,8 +193,8 @@ function trac_update_check_log() {
     newrev=$2
     MODULE="$3"
 
-    for csha in $(git log --pretty="%h"  $oldrev..$newrev); do
-	LOG=$(git log -1 --pretty="%s%n%b" $csha)
+    for csha in $(git-rev-list $oldrev..$newrev); do
+	LOG="$(git-rev-list -n 1 $csha --pretty=medium | sed '1,3d;s:^    ::')"
 
 	$PYTHON /home/git/scripts/trac-pre-commit-hook \
 	    "$TRACENV/$MODULE" "$LOG" || return 1
