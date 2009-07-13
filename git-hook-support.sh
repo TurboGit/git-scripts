@@ -145,6 +145,12 @@ check_style()
     return $exit_status
 }
 
+# Clean tmp directory
+
+clean_temp() {
+    rm -fr $root
+}
+
 # Check log not empty
 
 function log_not_empty() {
