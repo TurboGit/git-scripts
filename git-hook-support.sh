@@ -9,7 +9,7 @@ TRACURL=http://localhost:8000
 
 # Path needed by some tools (style_checker)
 
-PATH=/opt/gnat/bin:/usr/bin:/bin:/usr/local/bin:$PATH
+PATH=/opt/gnat/bin:/opt/bin:/usr/bin:/bin:/usr/local/bin:$PATH
 export PATH
 
 # Style Check all files for a specific transaction
