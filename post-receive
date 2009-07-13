@@ -14,8 +14,6 @@
 
 . /home/git/scripts/git-hook-support.sh
 
-read oldrev newrev ref
-
 while read oldrev newrev ref; do
     trac_post_receive_record_log "$oldrev" "$newrev" "$ref" gtest
 
