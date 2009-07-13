@@ -185,7 +185,7 @@ function trac_post_receive_record_log() {
    
 	$PYTHON /home/git/scripts/trac-post-commit-hook \
 	    -p "${TRACENV}/$MODULE"  \
-	    -r "git:$USER:$(basename $PWD):$csha" \
+	    -r "$csha"      \
 	    -u "$AUTHOR"    \
 	    -m "$LOG"       \
 	    -s "${TRACURL}/$MODULE" 2> /tmp/post_commit_err_$csha
