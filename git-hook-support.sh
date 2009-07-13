@@ -188,7 +188,7 @@ function trac_post_receive_record_log() {
 	    -r "$csha"      \
 	    -u "$AUTHOR"    \
 	    -m "$LOG"       \
-	    -s "${TRACURL}/$MODULE" 2> /tmp/post_commit_err_$csha
+	    -s "${TRACURL}/$MODULE" 2> $root/post_commit_err_$csha
     done
 }
 
