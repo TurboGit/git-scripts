@@ -27,9 +27,9 @@ display () {
    n=$(git cherry $branch $from | wc | cut -d' ' -f6)
    echo
    echo -n "$branch ($from"
-   if [ "$n" == "" ]; then
+   if [ "$n" = "" ]; then
        echo ")"
-   elif [ "$n" == "1" ]; then
+   elif [ "$n" = "1" ]; then
        echo " has diverged of 1 commit)"
    else
        echo " has diverged of $n commits)"
