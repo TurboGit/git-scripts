@@ -6,5 +6,5 @@ fi
 git svn rebase
 
 if [[ "$NO_STASH" != "true" ]]; then
-    git stash apply
+    git stash pop
 fi
