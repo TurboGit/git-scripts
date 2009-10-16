@@ -56,6 +56,11 @@ function current_svn_rev() {
    fi
 }
 
+function git_root() {
+   git_dir=$(git rev-parse --git-dir 2> /dev/null) || return
+   echo $(dirname $git_dir)
+}
+
 function current_scm_info() {
    local mygitinfo="$(current_git_branch)"
 
@@ -82,13 +87,6 @@ function current_scm_info() {
    if [[ -n ${mysvninfo} ]] ; then
          printf $SCM_INFO_FORMAT "svn'${mysvninfo}"
    fi
-}
-
-function git_root() {
-   while [[ ! "$PWD" = "/" && ! -d $PWD/.git ]]; do
-      cd ..
-   done
-   echo $PWD
 }
 
 function git_repository_name() {
