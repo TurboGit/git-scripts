@@ -58,7 +58,12 @@ function current_svn_rev() {
 
 function git_root() {
    git_dir=$(git rev-parse --git-dir 2> /dev/null) || return
-   echo $(dirname $git_dir)
+   result=$(dirname $git_dir)
+   if [ "$result" = "." ]; then
+      echo $PWD
+   else
+      echo $result
+   fi
 }
 
 function current_scm_info() {
