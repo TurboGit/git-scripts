@@ -26,7 +26,7 @@ display () {
    from=${2:-master}
    n=$(git cherry $from $branch | wc -l)
    echo
-   printf "* $branch (`git log -1 --pretty="%ai" $branch`)"
+   printf "  * $branch (`git log -1 --pretty="%ai" $branch`)"
    if [ "$n" = "" ]; then
        echo ""
    elif [ "$n" = "1" ]; then
@@ -35,7 +35,7 @@ display () {
        echo " $n commits"
    fi
    git log --pretty="      %s" $branch ^$from |
-       while read line; do printf -- " - %s\n" "$line"; done
+       while read line; do printf -- "   - %s\n" "$line"; done
 }
 
 handle_line () {
