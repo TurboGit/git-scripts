@@ -6,7 +6,7 @@ USAGE=''
 
 LONG_USAGE="   Read wip file and display topic branch/log waiting for merging
 
-   The WIP file is found under .git/.wip. There is three kinds of line:
+   The WIP file is '.git/.wip'. There is three kinds of line:
 
       <empty>               : does nothing
       --- <text>            : display --- <text> as-is
