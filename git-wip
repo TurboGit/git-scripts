@@ -2,7 +2,7 @@
 
 program=$0
 
-USAGE=''
+USAGE='[--stat]'
 
 LONG_USAGE="   Read wip file and display topic branch/log waiting for merging
 
@@ -20,6 +20,7 @@ require_work_tree
 cd_to_toplevel
 
 FILE=".git/.wip"
+STAT=0
 
 display () {
    branch=$1
@@ -36,6 +37,10 @@ display () {
    fi
    git log --pretty="      %s" $branch ^$from |
        while read line; do printf -- "   - %s\n" "$line"; done
+   if [ "$STAT" = "1" ]; then
+       echo ""
+       git diff $branch~$n..$branch --stat | sed 's,^,    ,g'
+   fi
 }
 
 handle_line () {
@@ -50,12 +55,23 @@ handle_line () {
    esac
 }
 
-case $1 in
-   -h|*help)
-      usage;;
-   *) if [ -f $FILE ]; then
-         while read line; do handle_line "$line" $line; done < $FILE;
-      else
-         echo No WIP description for this project.
-      fi
-esac
+while :
+do
+    case $1 in
+	-h|*help)
+	    usage
+	    ;;
+	--stat)
+	    STAT=1
+	    ;;
+	*)
+	    if [ -f $FILE ]; then
+		while read line; do handle_line "$line" $line; done < $FILE;
+	    else
+		echo No WIP description for this project.
+	    fi
+	    break
+	    ;;
+    esac
+    shift
+done
