@@ -1,3 +1,4 @@
+#
 # Some bash code to get information about the current SCM repository.
 #
 # Usage: add ". .bash-scm" into your .bashrc
@@ -21,111 +22,177 @@
 #    host:[repository] dir
 #
 
-function current_git_branch() {
-   local result git_dir git_state
-   result=$(git symbolic-ref HEAD 2>/dev/null)
-   result=${result##refs/heads/}
-   git_dir=$(git rev-parse --git-dir 2> /dev/null) || return
-
-   if test -d "$git_dir/rebase-merge"; then
-      git_state=" - rebase - "
-   elif test -f "$git_dir/rebase-apply"; then
-      git_state=" - am - "
-   elif test -f "$git_dir/BISECT_LOG"; then
-      git_state=" - bisect - "
-   fi
-
-   echo "$result$git_state"
-}
-
-function current_cvs_repo_name() {
-   local result=$(< CVS/Repository)
-   echo "${result%%/*}"
-}
-
-function current_cvs_repo() {
-   if [[ -f CVS/Repository ]] ; then
-      echo "$(current_cvs_repo_name)"
-   fi
-}
-
-function current_svn_rev() {
-   if [[ -d .svn ]] ; then
-      echo "r$(LANG=C svn info | \
-         sed -n -e '/^Revision: \([0-9]*\).*$/s//\1/p')"
-   fi
-}
+####################################
+#  Git
+#
 
 function git_root() {
-   git_dir=$(git rev-parse --git-dir 2> /dev/null) || return
-   result=$(dirname $git_dir)
-   if [ "$result" = "." ]; then
-      echo $PWD
-   else
-      echo $result
-   fi
-}
-
-function current_scm_info() {
-   local mygitinfo="$(current_git_branch)"
-
-   if [ -z $SCM_INFO_FORMAT ]; then
-      SCM_INFO_FORMAT="(%s)"
-   fi
-
-   if [[ -n ${mygitinfo} ]] ; then
-      if [[ -d $(git_root)/.git/svn ]]; then
-         printf $SCM_INFO_FORMAT "git-svn'${mygitinfo}"
-      else
-         printf $SCM_INFO_FORMAT "git'${mygitinfo}"
-      fi
-      return
-   fi
-
-   local mycvsinfo=$(current_cvs_repo)
-   if [[ -n ${mycvsinfo} ]] ; then
-         printf $SCM_INFO_FORMAT "cvs'${mycvsinfo}"
-         return
-   fi
-
-   local mysvninfo=$(current_svn_rev)
-   if [[ -n ${mysvninfo} ]] ; then
-         printf $SCM_INFO_FORMAT "svn'${mysvninfo}"
-   fi
+    git_dir=$(git rev-parse --git-dir 2> /dev/null) || return
+    result=$(dirname $git_dir)
+    if [ "$result" = "." ]; then
+	echo $PWD
+    else
+	echo $result
+    fi
 }
 
 function git_repository_name() {
-   echo $(basename "$(git_root)")
+    echo $(basename "$(git_root)")
 }
 
+function git_current_branch() {
+    local result git_dir git_state
+    result=$(git symbolic-ref HEAD 2>/dev/null)
+    result=${result##refs/heads/}
+    git_dir=$(git rev-parse --git-dir 2> /dev/null) || return
+
+    if test -d "$git_dir/rebase-merge"; then
+	git_state=" - rebase - "
+    elif test -f "$git_dir/rebase-apply"; then
+	git_state=" - am - "
+    elif test -f "$git_dir/BISECT_LOG"; then
+	git_state=" - bisect - "
+    fi
+
+    echo "$result$git_state"
+}
+
+####################################
+#  Subversion
+#
+
 function svn_root() {
-   LAST=$PWD
-   while [[ ! "$PWD" = "/" && -d $PWD/.svn ]]; do
-      LAST=$PWD
-      cd ..
-   done
-   echo $LAST
+    LAST=$PWD
+    while [[ ! "$PWD" = "/" && -d $PWD/.svn ]]; do
+	LAST=$PWD
+	cd ..
+    done
+    echo $LAST
 }
 
 function svn_repository_name() {
-   echo $(basename "$(svn_root)")
+    echo $(basename "$(svn_root)")
+}
+
+function svn_revision() {
+    if [[ -d .svn ]] ; then
+	echo "r$(LANG=C svn info | \
+         sed -n -e '/^Revision: \([0-9]*\).*$/s//\1/p')"
+    fi
+}
+
+####################################
+#  CVS
+#
+
+function cvs_repository_name() {
+    local result=$(< CVS/Repository)
+    echo "${result%%/*}"
+}
+
+function cvs_repository() {
+    if [[ -f CVS/Repository ]] ; then
+	echo "$(cvs_repository_name)"
+    fi
+}
+
+####################################
+#  Bazaar
+#
+
+function bzr_repository_name() {
+    echo $(basename "$(bzr info 2> /dev/null | awk '/shared repository/{print $3}')")
+}
+
+function bzr_current_branch() {
+    echo $(basename "$(bzr info 2> /dev/null | awk '/parent branch/{print $3}')")
+}
+
+####################################
+#  Helpers
+#
+
+function get_scm() {
+    while [[ ! "$PWD" = "$HOME" ]]; do
+	if [[ -d .git ]]; then
+	    echo GIT; return;
+	elif [[ -d .svn ]]; then
+	    echo SVN; return;
+	elif [[ -d CVS/Root ]]; then
+	    echo CVS; return;
+	elif [[ -d .bzr ]]; then
+	    echo BZR; return;
+	fi
+	cd ..
+    done
+    echo ""
+}
+
+function current_scm_info() {
+    local info=""
+    local vcs=""
+    local SCM=$(get_scm)
+
+    if [ -z $SCM_INFO_FORMAT ]; then
+	SCM_INFO_FORMAT="(%s)"
+    fi
+
+
+    case "$SCM" in
+	GIT)
+	    info="$(git_current_branch)";
+	    if [[ -d $(git_root)/.git/svn ]]; then
+		vcs="git-svn";
+	    else
+		vcs="git-svn";
+	    fi;
+	    ;;
+	SVN)
+	    info=$(svn_revision);
+	    vcs="svn";
+	    ;;
+	CVS)
+	    info=$(cvs_repository);
+	    vcs="cvs";
+	    ;;
+	BZR)
+	    info=$(bzr_current_branch);
+	    vcs="bzr";
+	    ;;
+	"")
+	    return
+	    ;;
+    esac;
+
+    printf $SCM_INFO_FORMAT "${vcs}'${info}";
 }
 
 function tab_title() {
-   local cdir=$(basename "$PWD")
+    local SCM=$(get_scm)
+    local cdir=$(basename "$PWD")
+    local info=""
 
-   if [[ "$1" == "true" ]]; then
-       HNAME="$(hostname):";
-   fi;
+    if [[ "$1" == "true" ]]; then
+	HNAME="$(hostname):";
+    fi;
 
-   if [[ -n $(current_git_branch) ]] ; then
-       echo "$HNAME[$(git_repository_name)] $cdir"
-   elif [[ -n $(current_svn_rev) ]] ; then
-       echo "$HNAME[$(svn_repository_name)] $cdir"
-   elif [[ -n $(current_cvs_repo) ]] ; then
-       echo "$HNAME[$(current_cvs_repo_name)] $cdir"
-   else
-       rdir=$(dirname "$PWD")
-       echo $HNAME$(basename "$rdir")/$cdir
-   fi
+    case "$SCM" in
+	GIT)
+	    info="[$(git_repository_name)] "
+	    ;;
+	SVN)
+	    info="[$(svn_repository_name)] "
+	    ;;
+	CVS)
+	    info="[$(cvs_repository_name)] "
+	    ;;
+	BZR)
+	    info="[$(bzr_repository_name)] "
+	    ;;
+	"")
+	    info=$(basename $(dirname "$PWD"))/
+	    ;;
+    esac;
+
+    echo "${HNAME}${info}${cdir}"
 }
