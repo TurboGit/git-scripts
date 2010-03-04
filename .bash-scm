@@ -144,7 +144,7 @@ function current_scm_info() {
 	    if [[ -d $(git_root)/.git/svn ]]; then
 		vcs="git-svn";
 	    else
-		vcs="git-svn";
+		vcs="git";
 	    fi;
 	    ;;
 	SVN)
