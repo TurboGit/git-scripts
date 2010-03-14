@@ -113,7 +113,7 @@ function bzr_current_branch() {
 #
 
 function get_scm() {
-    while [[ ! "$PWD" = "$HOME" ]]; do
+    while [[ ! "$PWD" = "$HOME" && ! "$PWD" = "/" ]]; do
 	if [[ -d .git ]]; then
 	    echo GIT; return;
 	elif [[ -d .svn ]]; then
