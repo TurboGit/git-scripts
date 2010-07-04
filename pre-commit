@@ -50,7 +50,13 @@ esac
 
 function check() {
    id=$4
-   file=`basename $6`
+
+   if [[ "$7" = "" ]]; then
+       file=`basename $6`
+   else
+       file=`basename $7`
+   fi
+
    mode=$(echo $5 | cut -c1)
 
    #  Check if it is a file to ignore
