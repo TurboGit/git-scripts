@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GNATROOT=/opt/gnat/2007
+GNATROOT=/opt/gnat/2010
 
 PATH=$GNATROOT/bin:$HOME/bin:$PATH
 
