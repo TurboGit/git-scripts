@@ -113,7 +113,7 @@ if [[ -n "$MANIFEST" && -f $REP/.files.added ]]; then
     else
 	while read fadded
 	do
-	    grep --quiet ^$fadded $REP/.manifest
+	    grep --quiet ^$fadded\$ $REP/.manifest
 	    if [[ $? = 1 ]]; then
 		echo File $fadded added but missing in $MANIFEST
 		res=1
@@ -131,7 +131,7 @@ if [[ -n "$MANIFEST" && -f $REP/.files.removed ]]; then
     else
 	while read fremoved
 	do
-	    grep --quiet ^$fremoved $REP/.manifest
+	    grep --quiet ^$fremoved\$ $REP/.manifest
 	    if [[ $? = 0 ]]; then
 		echo File $fremoved removed but still in $MANIFEST
 		res=1
