@@ -50,45 +50,55 @@ esac
 
 function check() {
    id=$4
+   mode=$(echo $5 | cut -c1)
 
-   if [[ "$7" = "" ]]; then
-       file=`basename $6`
+   ofile=$6
+
+   if [[ "$mode" = "R" ]]; then
+       nfile="$7"
    else
-       file=`basename $7`
+       nfile="$6"
    fi
 
-   mode=$(echo $5 | cut -c1)
+   bfile=$(basename $nfile)
 
    #  Check if it is a file to ignore
 
-   if [[ -n "$EXCLUDE" && `echo "$6" | grep --regexp="$EXCLUDE"` ]]; then
+   if [[ -n "$EXCLUDE" && `echo "$nfile" | grep --regexp="$EXCLUDE"` ]]; then
       return 0;
    fi
 
-   #  skip deleted/renamed files
+   #  Skip deleted files as no check to be done
 
-   if [[ "$mode" = "D" || "$mode" = "R" ]]; then
-       echo $6 >> $REP/.files.removed
+   if [[ "$mode" = "D" ]]; then
+       echo $ofile >> $REP/.files.removed
        return 0;
    fi
 
-   git show $id > $REP/$file
+   #  A renamed file is removed and added
+
+   if [[ "$mode" = "R" ]]; then
+       echo $ofile >> $REP/.files.removed
+       echo $nfile >> $REP/.files.added
+   fi
+
+   git show $id > $REP/$bfile
 
    #  If the MANIFEST keep it around
 
-   if [[ "$6" = "$MANIFEST" ]]; then
-       cp $REP/$file $REP/.manifest
+   if [[ "$nfile" = "$MANIFEST" ]]; then
+       cp $REP/$bfile $REP/.manifest
    fi
 
    #  If a new file, record it
 
    if [[ "$mode" == "A" ]]; then
-       echo $6 >> $REP/.files.added
+       echo $nfile >> $REP/.files.added
    fi
 
-   ( cd $REP; style_checker $SC_OPTS -n "$6" "$file"; )
+   ( cd $REP; style_checker $SC_OPTS -n "$nfile" "$bfile"; )
    res=$(($res + $?))
-   rm -f $REP/$file
+   rm -f $REP/$bfile
 }
 
 mkdir $REP
