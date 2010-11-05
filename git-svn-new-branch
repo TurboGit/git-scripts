@@ -34,6 +34,10 @@ LONG_USAGE="   Commands:
 
 OPTIONS_SPEC=
 
+# Use default C as language to ensure that the regexp parsing Subversion
+# outout are maching.
+export LANG=C
+
 exec_path=$(git --exec-path)
 . $exec_path/git-sh-setup
 require_work_tree
