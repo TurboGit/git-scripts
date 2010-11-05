@@ -75,7 +75,7 @@ parse_command_line () {
    if [ $requires_url = True ]; then
       URL=$1
 
-      if [ "$URL" == "" ]; then
+      if [ "$URL" = "" ]; then
          echo "Missing URL"
          exit 1
       fi
@@ -141,7 +141,7 @@ get_new_branch () {
       die The given URL does not exists.
    fi
 
-   if [ "$dryrun" == "" ]; then
+   if [ "$dryrun" = "" ]; then
       git config svn-remote.$local_branch.url $URL
       git config svn-remote.$local_branch.fetch :refs/remotes/$branch_name
 
