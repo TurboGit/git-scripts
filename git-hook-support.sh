@@ -216,9 +216,15 @@ function send_mail_post_receive() {
     ref=$3
     MODULE="$4"
 
-    git log -p $oldrev..$newrev > $log
-    cat $log | mail -s "[$MODULE] $ref $oldrev..$newrev" $5 $6 $7 $8 $9
-    rm -fr $root
+    if expr "$oldrev" : "0*$" >/dev/null
+    then
+	git-rev-list "$newrev"
+    else
+	git-rev-list --reverse "$newrev" "^$oldrev"
+    fi | while read csha;
+    do
+	git-show $csha | mail -s "[$MODULE] $ref commit $csha" $5 $6 $7 $8 $9
+    done
 }
 
 # Post commit send xmpp
