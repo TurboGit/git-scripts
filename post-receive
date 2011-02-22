@@ -21,4 +21,6 @@ while read oldrev newrev ref; do
 	mail1@here.com mail2@there.net
 done
 
+clean_temp
+
 # . /usr/share/doc/git-core/contrib/hooks/post-receive-email

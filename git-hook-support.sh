@@ -139,8 +139,6 @@ check_style()
 	fi
     fi
 
-    rm -fr $root
-
     # --- Finished
     return $exit_status
 }
