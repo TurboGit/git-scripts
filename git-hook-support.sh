@@ -192,16 +192,25 @@ function trac_post_receive_record_log() {
 
 # Pre update action to check for proper ticket
 
+function is_merge_commit() {
+    git rev-parse --verify --quiet $1^2 > /dev/null
+}
+
 function trac_update_check_log() {
     oldrev=$1
     newrev=$2
     MODULE="$3"
 
     for csha in $(git-rev-list $oldrev..$newrev); do
-	LOG="$(git-rev-list -n 1 $csha --pretty=medium | sed '1,3d;s:^    ::')"
+	is_merge_commit $csha
+	if [ $? = 0 ]; then
+	    echo $csha is a merge commit, skip checks
+	else
+	    LOG="$(git-rev-list -n 1 $csha --pretty=medium | sed '1,3d;s:^    ::')"
 
-	$PYTHON /home/git/scripts/trac-pre-commit-hook \
-	    "$TRACENV/$MODULE" "$LOG" || return 1
+	    $PYTHON /home/git/scripts/trac-pre-commit-hook \
+		"$TRACENV/$MODULE" "$LOG" || return 1
+	fi
     done;
 
     return 0;
